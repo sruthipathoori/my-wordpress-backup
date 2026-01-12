@@ -2,9 +2,6 @@
 get_header();
 ?>
 <!-- Hero Section -->
-
-
-
 <section class="innerHero-section"
     style="background-image: url(<?php echo get_template_directory_uri() . '/assets/images/career/career-banner.jpg' ?>);">
     <div class="container">
@@ -74,15 +71,13 @@ get_header();
                                     Experience:</strong>
                                 <?php echo get_post_meta(get_the_ID(), JOB_POST_PREFIX . 'work_exp', TRUE); ?></p>
 
-                            <h2 class="job-subtitle text-white mt-4">Requirements</h2>
+                            <h2 class="job-subtitle text-white mt-4">Requirements:</h2>
                             <?php echo get_post_meta(get_the_ID(), JOB_POST_PREFIX . 'req', TRUE); ?>
 
                             <p class="innersec-white-medium mt-4"><strong class="job-subtitle text-white ">Qualifications:
                                 </strong>
-                                <?php echo get_post_meta(get_the_ID(), JOB_POST_PREFIX . 'qual', TRUE); ?></p>
-                            <p class="innersec-white-medium mt-4"><strong class="job-subtitle text-white ">Reports To: </strong>
-                                <?php echo get_post_meta(get_the_ID(), JOB_POST_PREFIX . 'reports_to', TRUE); ?></p>
-
+                                <?php echo get_post_meta(get_the_ID(), JOB_POST_PREFIX . 'qual', TRUE); ?>
+                            </p>
                             <p><strong class="job-subtitle text-white ">Job Description:</strong></p>
                             <?php echo get_post_meta(get_the_ID(), JOB_POST_PREFIX . 'desc', TRUE); ?>
 

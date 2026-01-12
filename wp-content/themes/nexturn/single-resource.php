@@ -68,7 +68,94 @@
                         </div>
                     </div>
                 </section>
+                <?php
+                    // =====================================
+                    // READ NEXT – RELATED RESOURCES (BLOG STYLE)
+                    // =====================================
 
+                    $current_id = get_the_ID();
+
+                    // IMPORTANT: use your custom taxonomy slug
+                    $terms = get_the_terms($current_id, 'resource_group');
+
+                    if ($terms && !is_wp_error($terms)) :
+
+                        $term_ids = wp_list_pluck($terms, 'term_id');
+
+                        $read_next = new WP_Query([
+                            'post_type'      => 'resource',     // your CPT
+                            'posts_per_page' => 3,
+                            'post__not_in'   => [$current_id],
+                            'tax_query'      => [
+                                [
+                                    'taxonomy' => 'resource_group',
+                                    'field'    => 'term_id',
+                                    'terms'    => $term_ids,
+                                ],
+                            ],
+                            'orderby' => 'date',
+                            'order'   => 'DESC',
+                        ]);
+
+                        if ($read_next->have_posts()) :
+                ?>
+
+                <section class="read-next-section container my-5">
+                    <h3 class="mb-4 fw-bold">READ NEXT</h3>
+
+                    <?php while ($read_next->have_posts()) : $read_next->the_post(); ?>
+
+                        <?php
+                        // Image (MetaBox)
+                        $img = rwmb_meta('resource_image', ['size' => 'medium'], get_the_ID());
+                        $img_url = ($img && is_array($img)) ? reset($img)['url'] : '';
+
+                        // Summary
+                        $summary = rwmb_meta('resource_summary', [], get_the_ID());
+                        $excerpt = !empty($summary)
+                            ? wp_trim_words($summary, 28)
+                            : wp_trim_words(get_the_content(), 28);
+                        ?>
+
+                        <article class="read-next-item d-flex gap-4 mb-5">
+
+                            <!-- Image -->
+                            <?php if ($img_url): ?>
+                                <a href="<?php the_permalink(); ?>" class="read-next-image">
+                                    <img src="<?php echo esc_url($img_url); ?>"
+                                        alt="<?php the_title_attribute(); ?>">
+                                </a>
+                            <?php endif; ?>
+
+                            <!-- Content -->
+                            <div class="read-next-content">
+                                <h4 class="mb-2">
+                                    <a href="<?php the_permalink(); ?>">
+                                        <?php the_title(); ?>
+                                    </a>
+                                </h4>
+
+                                <p class="mb-2">
+                                    <?php echo esc_html($excerpt); ?>
+                                </p>
+
+                                <div class="read-next-meta">
+                                    <?php echo get_the_author(); ?> · <?php echo get_the_date('M j, Y'); ?>
+                                </div>
+                            </div>
+
+                        </article>
+
+                    <?php endwhile; ?>
+                </section>
+
+                <?php
+                    wp_reset_postdata();
+                    endif;
+                endif;
+                ?>
+
+         
                 <!-- MODAL FORM -->
                 <div class="modal fade findanwser" id="resource_form_modal" tabindex="-1" aria-labelledby="resourceFormLabel" aria-hidden="true">
                     <div class="modal-dialog modal-xl">

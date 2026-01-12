@@ -2,20 +2,16 @@
 get_header();
 ?>
 <section class="innerHero-section"
-   style="background-image: url(<?php echo get_template_directory_uri() . '/assets/images/about_banner.svg' ?>);">
+   style="background-image: url('http://localhost/wordpress/wp-content/uploads/2025/12/Clip-path-group-4.png');">
    <div class="container">
       <div class="innerBanner-text">
-         <h1 class="display-4 fw-bold mb-4">Engineering <span class="impact-text">Impact</span> for<br>
-            <span class="global-text">Global Leaders</span> <span class="innovators-text">and Innovators</span>
-         </h1>
-         <p class="lead mb-4">We are here to propel organizations into the future, crafting transformative technologies
-            that drive progress, amplify impact, and inspire greatness.</p>
-         <?php get_template_part('template', 'partner-link') ?>
+         <h1 class="display-4 fw-bold mb-4">Engineering Impact for the Future</h1>
+         <p class="lead mb-0">At NextTurn, we are dedicated to harnessing the power of Data & AI to drive innovation,
+            efficiency, and transformation for businesses worldwide. Our journey is about creating measurable impact
+            with technology that redefines possibilities.</p>
       </div>
-
    </div>
 </section>
-
 
 
 <!--  middle comtent -->

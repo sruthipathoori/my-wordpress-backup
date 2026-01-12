@@ -2,29 +2,54 @@
 global $nexturn_opt; ?>
 <footer class="bg-dark text-white pt-5">
   <div class="container">
-    <div class="row">
+    <div class="row footer-main-row">
       <!-- Left column - Offices information -->
-      <div class="col-md-6">
-        <h2 class="mb-4">Offices</h2>
+      <div class="col-md-3 footer-col footer-divider-right">
+        <h2 class="mb-3">Offices</h2>
         <?php
         for ($i = 0; $i <= count($nexturn_opt['office_location']) - 1; $i++):
           if ($nexturn_opt['show_hide'][$i] == '1'):
             ?>
-            <div class="mb-4">
+            <div class="mb-3">
               <h5><span class="fw-bold"><?php echo $nexturn_opt['office_location'][$i]; ?></span></h5>
               <p class="mb-0"><?php echo $nexturn_opt['office_address_1'][$i]; ?></p>
               <p><?php echo $nexturn_opt['office_address_2'][$i]; ?></p>
             </div>
           <?php endif; endfor; ?>
+        
       </div>
-
+      <!--services -->
+      <div class="col-md-3 footer-col footer-divider-right">
+        <h2 class="footer-title">Services</h2>
+        <ul class="footer-links">         
+          <a href="<?php echo site_url('/cloud-engineering'); ?>">Cloud</a><br>
+          <a href="<?php echo site_url('/cloud-engineering/?pos=product-engineering'); ?>">Product Engineering</a><br>
+          <a href="<?php echo site_url('/cloud-engineering/?pos=infrastructure-engineering'); ?>">Infrastructure Engineering</a><br>         
+          <a href="<?php echo site_url('/data-and-ai'); ?>">Data & AI</a><br>         
+          <a href="<?php echo site_url('/agentforce'); ?>">Agentforce</a><br>
+          <a href="<?php echo site_url('/oracle-netsuite'); ?>">Oracle-NetSuite</a> <br>  
+          <a href="<?php echo site_url('/oracle-ebs'); ?>">Oracle-EBS</a>       
+        </ul>
+      </div>
+      
+      <!-- Quick links -->
+      <div class="col-md-3 footer-col footer-divider-right">
+        <h2 class="footer-title">Quick Links</h2>
+        <div class="quick-links-wrapper">
+          <ul class="footer-links">
+          <a href="<?php echo site_url('/resources'); ?>">Resource Center</a><br>
+          <a href="<?php echo site_url('/careers'); ?>">Careers</a><br>
+          <a href="<?php echo site_url('/about-us'); ?>">About Us</a><br>
+          <a href="<?php echo site_url('/contact-us'); ?>">Contact Us</a>
+        </ul>
+        </div>
+      </div>
       <!-- Right column - Contact info -->
-      <div class="col-md-6 text-md-end">
+      <div class="col-md-3 footer-col-brands ">
         <img 
         src="<?php echo esc_url('http://localhost/wordpress/wp-content/uploads/2025/11/ISO-Badge.png'); ?>"
         alt="ISO Certified" 
         class="iso-badge"
-
         />
 
         <div class="pb-4"> <a href="<?php echo site_url(); ?>" class="">
@@ -54,7 +79,6 @@ global $nexturn_opt; ?>
         </div>
       </div>
     </div>
-
 
   </div>
   <div class="bg-black">

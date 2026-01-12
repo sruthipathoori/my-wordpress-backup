@@ -143,13 +143,13 @@ function nexturn_register_meta_boxes($meta_boxes)
                 'type' => 'text',
                 'size'=> 75
             ),
-            array(
-                'name' => __('Reports To', 'your-prefix'),
-                'id' => "{$job_post_prefix}reports_to",
-                'desc' => __('', 'your-prefix'),
-                'type' => 'text',
-                'size'=> 50
-            ),
+            // array(
+            //     'name' => __('Reports To', 'your-prefix'),
+            //     'id' => "{$job_post_prefix}reports_to",
+            //     'desc' => __('', 'your-prefix'),
+            //     'type' => 'text',
+            //     'size'=> 50
+            // ),
             array(
                 'name' => __('Requirements', 'your-prefix'),
                 'id' => "{$job_post_prefix}req",
@@ -246,6 +246,41 @@ function nexturn_register_meta_boxes($meta_boxes)
             ),
         )
     );
+    add_filter('rwmb_meta_boxes', 'campaign_meta_boxes');
+
+    $campaign_prefix = 'campaign_';
+
+    $meta_boxes[] = array(
+        'id'         => 'campaign_info',
+        'title'      => __('Campaign Information', 'your-prefix'),
+        'post_types' => array('campaign'),
+        'context'    => 'normal',
+        'priority'   => 'high',
+        'autosave'   => true,
+        'fields'     => array(
+
+            array(
+                'name' => __('External Page URL', 'your-prefix'),
+                'id'   => "{$campaign_prefix}external_url",
+                'type' => 'url',
+                'desc' => __('Paste the external webpage URL. Content will be fetched automatically.', 'your-prefix'),
+            ),
+
+            array(
+                'name' => __('Intro Content (Optional)', 'your-prefix'),
+                'id'   => "{$campaign_prefix}intro",
+                'type' => 'wysiwyg',
+                'options' => array(
+                    'textarea_rows' => 5,
+                    'media_buttons' => false,
+                    'teeny'         => false,
+                    'wpautop'       => false,
+                ),
+                'desc' => __('Content shown above the fetched external page.', 'your-prefix'),
+            ),
+        ),
+    );
+    
 
     return $meta_boxes;
 }

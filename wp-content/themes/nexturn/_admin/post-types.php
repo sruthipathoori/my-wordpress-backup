@@ -283,3 +283,28 @@ function resource_group_taxonomy_init() {
     register_taxonomy('resource_group', array('resource'), $args );
 }
 
+add_action('init', 'campaign_post_type_init');
+function campaign_post_type_init() {
+
+    $labels = array(
+        'name'          => __('Campaigns'),
+        'singular_name' => __('Campaign'),
+        'add_new_item'  => __('Add New Campaign'),
+        'edit_item'     => __('Edit Campaign'),
+        'menu_name'     => __('Campaigns'),
+    );
+
+    $args = array(
+        'labels'        => $labels,
+        'public'        => true,
+        'show_ui'       => true,
+        'menu_icon'     => 'dashicons-megaphone',
+        'supports'      => array('title'),
+        'has_archive'   => true,
+        'rewrite'       => array('slug' => 'campaign'),
+        'show_in_rest'  => true,
+    );
+
+    register_post_type('campaign', $args);
+}
+

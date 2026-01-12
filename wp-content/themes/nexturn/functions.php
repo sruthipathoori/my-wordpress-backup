@@ -66,7 +66,6 @@ require_once get_template_directory() . '/_admin/metaboxes.php';  // Meta-boxes
 require_once get_template_directory() . '/_admin/theme-options.php';
 
 
-
 if (!function_exists('nexturn_theme_scripts')):
     function nexturn_theme_scripts()
     {
@@ -560,10 +559,10 @@ function put_job_thumbs()
                             <strong class="job-subtitle">Qualifications:</strong>
                             <?php echo get_post_meta(get_the_ID(), JOB_POST_PREFIX . 'qual', TRUE); ?>
                         </div>
-                        <div class="mb-3 card-text-medium">
+                        <!-- <div class="mb-3 card-text-medium">
                             <strong class="job-subtitle">Reports To:</strong>
                             <?php echo get_post_meta(get_the_ID(), JOB_POST_PREFIX . 'reports_to', TRUE); ?>
-                        </div>
+                        </div> -->
                         <div class="my-4 ">
                             <strong class="job-subtitle">Job Description:</strong>
                             <p class="card-text-medium">
@@ -644,15 +643,15 @@ function handle_live_search()
 
 add_shortcode('partner-with-us', function () {
     ob_start(); ?>
-    <a class="svg-container action-click cta-btn" data-bs-target="#partner_contact_modal" data-bs-toggle="modal"><span
-            class="pe-3">Partner with us</span>
+    <a class="svg-container action-click cta-btn" data-bs-target="#partner_contact_modal" data-bs-toggle="modal">
+        <span class="pe-3">Partner with us</span>
         <svg class="home-bn-arrow home-bn-arrow-sec" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
             <g data-name="Layer 2">
-                <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z" fill="#ffffff"
+                <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z"
                     class="fill-000000"></path>
                 <path
                     d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 0-1.41 1 1 0 0 1 1.41 0l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z"
-                    fill="#ffffff" class="fill-000000"></path>
+                     class="fill-000000"></path>
             </g>
         </svg>
     </a>
@@ -664,16 +663,34 @@ add_shortcode('partner-with-us', function () {
     return ob_get_clean();
 });
 
+add_shortcode('partners-btn', function ($atts = []) {
+    ob_start();
+    ?>
+    <a class="svg-container partner-btn" data-bs-toggle="modal" data-bs-target="#partner_contact_modal">
+        <span class="pe-3">Partner With Us</span>
+        <svg class="home-bn-arrow home-bn-arrow-sec" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+            <g data-name="Layer 2">
+                <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z"
+                    class="circle"></path>
+                <path d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 0-1.41 1 1 0 0 1 1.41 0l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z"
+                    class="arrow"></path>
+            </g>
+        </svg>
+    </a>
+    <?php
+    return ob_get_clean();
+});
+
 add_shortcode('home-partner-with-us', function () {
     ob_start(); ?>
-    <a class="svg-container cta-btn home-cta-btn" data-bs-toggle="modal" data-bs-target="#partner_contact_modal">
+   <a class="svg-container action-click cta-btn" data-bs-target="#partner_contact_modal" data-bs-toggle="modal">
         <svg class="home-bn-arrow" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
             <g data-name="Layer 2">
-                <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z" fill="#ffffff"
+                <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z" 
                     class="fill-000000"></path>
                 <path
                     d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 0-1.41 1 1 0 0 1 1.41 0l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z"
-                    fill="#ffffff" class="fill-000000"></path>
+                    class="fill-000000"></path>
             </g>
         </svg>
     </a>
@@ -692,19 +709,15 @@ add_shortcode('know-more', function ($atts = []) {
         'text' => 'Know More',
     ), $atts);
     ?>
-    <a class="svg-container" href="<?php echo site_url($atts['slug']) ?>"><span
+    <a class="svg-container know-more" href="<?php echo site_url($atts['slug']) ?>"><span
             class="pe-3"><?php echo $atts['text'] ?></span>
-        <svg class="home-bn-arrow home-bn-arrow-sec" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-            <g data-name="Layer 2">
-                <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z" fill="#ffffff"
-                    class="fill-000000"></path>
-                <path
-                    d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 0-1.41 1 1 0 0 1 1.41 0l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z"
-                    fill="#ffffff" class="fill-000000"></path>
-            </g>
-        </svg>
+        <?php
+        global $nexturn_opt;
+        $final_cta_svg = substr_replace($nexturn_opt['know_more_svg'], 'class="' . $nexturn_opt['know_more_svg_class'] . '"', 5, 0);
+        echo $final_cta_svg;
+        ?>
     </a>
-<?php
+    <?php
     return ob_get_clean();
 });
 
@@ -884,7 +897,7 @@ add_shortcode('team-testimonial', function () {
     endif;
     return ob_get_clean();
 });
-
+ 
 // Helper function to render resource HTML
 function render_resource_html($resource, $counter)
 {
@@ -893,7 +906,7 @@ function render_resource_html($resource, $counter)
     $resource_card_text = $resource_summary !== '' ? $resource_summary : $resource_text;
    
     // Limit description length
-    $resource_excerpt = wp_trim_words(strip_tags($resource_card_text), 70, '...');
+    $resource_excerpt = wp_trim_words(strip_tags($resource_card_text), 60, '...');
 
     $resource_image = rwmb_meta('resource_image', ['size' => 'large'], $resource->ID);
     $resource_image_url = '';
@@ -916,9 +929,9 @@ function render_resource_html($resource, $counter)
     <div class="col-lg-6 order-2 order-lg-1 p-0">
         <!--TEXT CONTENT -->
         <div class="service-card small-card">
-            <div class="col-lg-11 px-lg-4 px-0">
+            <div class="col-12 px-4">
                 <?php if ($group_name): ?>
-                    <span class="resource-group-label mb-2 d-block text-uppercase" style="font-size:28px; line-height:1.15; font-weight:700; margin-bottom:12px; color:#111;">
+                    <span class="resource-group-label mb-4 d-block text-uppercase" style="font-size:28px; line-height:1.15; font-weight:700; margin-bottom:12px; color:#111;">
                         <?php echo esc_html($group_name); ?>
                     </span>
                 <?php endif; ?>
@@ -931,9 +944,9 @@ function render_resource_html($resource, $counter)
                     <p class="description animate-on-scroll innersec-white"><?php echo wp_kses_post($resource_excerpt); ?></p>
                 <?php endif; ?>
 
-                <a href="<?php echo esc_url(get_permalink($resource)); ?>" class="animate-on-scroll svg-container cta-btn" target="_blank">
+                <a href="<?php echo esc_url(get_permalink($resource)); ?>" class="animate-on-scroll svg-container know-more" target="_blank">
                     <span class="pe-2">Know More</span>
-                    <svg class="home-bn-arrow" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                    <svg class="home-bn-arrow home-bn-arrow-sec" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
                         <g data-name="Layer 2">
                             <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z" fill="#ffffff"></path>
                             <path d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 1.41-1.41l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z" fill="#ffffff"></path>
@@ -957,9 +970,9 @@ function render_resource_html($resource, $counter)
     <!-- TEXT Second -->
     <div class="col-lg-6 order-2 p-0">
         <div class="service-card small-card">
-            <div class="col-lg-11 px-lg-4 px-0">
+            <div class="col-12 px-4">
                 <?php if ($group_name): ?>
-                    <span class="resource-group-label mb-2 d-block text-uppercase" style="font-size:28px; line-height:1.15; font-weight:700; margin-bottom:12px; color:#111;">
+                    <span class="resource-group-label mb-4 d-block text-uppercase" style="font-size:28px; line-height:1.15; font-weight:700; margin-bottom:12px; color:#111;">
                         <?php echo esc_html($group_name); ?>
                     </span>
                 <?php endif; ?>
@@ -972,9 +985,9 @@ function render_resource_html($resource, $counter)
                     <p class="animate-on-scroll innersec-white"><?php echo wp_kses_post($resource_excerpt); ?></p>
                 <?php endif; ?>
 
-                <a href="<?php echo esc_url(get_permalink($resource)); ?>" class="animate-on-scroll svg-container cta-btn" target="_blank">
+                <a href="<?php echo esc_url(get_permalink($resource)); ?>" class="animate-on-scroll svg-container know-more" target="_blank">
                     <span class="pe-2">Know More</span>
-                    <svg class="home-bn-arrow" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                    <svg class="home-bn-arrow home-bn-arrow-sec" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
                         <g data-name="Layer 2">
                             <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z" fill="#ffffff"></path>
                             <path d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 1.41-1.41l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z" fill="#ffffff"></path>
@@ -1129,7 +1142,7 @@ add_shortcode('resources-section', function ($atts) {
         
         <!-- RESOURCE CARDS (Existing Section Boxes) -->
         <?php if (!empty($resources_to_render)): ?>
-            <div id="resources-container h-100 d-flex resources-container-inner">
+            <div id="resources-container" class="h-100 resources-container-inner">
                 <?php
                 $counter = 0;
                 foreach ($resources_to_render as $resource):
@@ -1145,7 +1158,6 @@ add_shortcode('resources-section', function ($atts) {
     </div>
 </section>
 
-
 <!-- POPUP HTML -->
 <div id="resource-popup" class="resource-popup">
     <div class="popup-content">
@@ -1160,13 +1172,216 @@ add_shortcode('resources-section', function ($atts) {
 return ob_get_clean();
 });
 
-
-
 add_action('wp_enqueue_scripts', function () {
     // Adjust paths based on your theme structure
-    wp_enqueue_style('resources-section', get_template_directory_uri() . '/assets/css/resources-section.css', [], '1.0.0');
+    wp_enqueue_style('resources-section', get_template_directory_uri() . '/assets/css/theme.css', [], '1.0.0');
     wp_enqueue_script('resources-section', get_template_directory_uri() . '/assets/js/resources-section.js', ['jquery'], '1.0.0', true);
 });
 
+// Functions for campaign page 
+function wp_external_page_fetch($url) {
+
+    if (empty($url)) {
+        return false;
+    }
+
+    $response = wp_remote_get($url, array(
+        'timeout' => 30,
+        'redirection' => 5,
+        'sslverify' => false, // IMPORTANT for many external sites
+        'headers' => array(
+            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        ),
+    ));
+
+    if (is_wp_error($response)) {
+        error_log('WP Remote Get Error: ' . $response->get_error_message());
+        return false;
+    }
+
+    $status = wp_remote_retrieve_response_code($response);
+    if ($status !== 200) {
+        error_log('HTTP Status: ' . $status);
+        return false;
+    }
+
+    $html = wp_remote_retrieve_body($response);
+    if (empty($html)) {
+        error_log('Empty HTML response');
+        return false;
+    }
+
+    return $html; // RETURN FULL HTML FIRST
+}
+
+
+function get_base_url($url) {
+    $parts = parse_url($url);
+    return $parts['scheme'] . '://' . $parts['host'];
+}
+function extract_clean_body_content($html) {
+
+    if (empty($html)) {
+        return false;
+    }
+
+    libxml_use_internal_errors(true);
+
+    $dom = new DOMDocument();
+    $dom->loadHTML('<?xml encoding="utf-8" ?>' . $html);
+
+    libxml_clear_errors();
+
+    $xpath = new DOMXPath($dom);
+
+    // REMOVE HEADER, NAV, FOOTER
+    $remove_tags = ['header', 'nav', 'footer'];
+
+    foreach ($remove_tags as $tag) {
+        $nodes = $xpath->query("//{$tag}");
+        foreach ($nodes as $node) {
+            $node->parentNode->removeChild($node);
+        }
+    }
+
+    // OPTIONAL: remove scripts & styles (recommended)
+    // foreach ($xpath->query('//script | //style') as $node) {
+    //     $node->parentNode->removeChild($node);
+    // }
+
+    // GET BODY CONTENT
+    $body = $dom->getElementsByTagName('body')->item(0);
+
+    if (!$body) {
+        return false;
+    }
+
+    $clean_html = '';
+    foreach ($body->childNodes as $child) {
+        $clean_html .= $dom->saveHTML($child);
+    }
+
+    return $clean_html;
+}
+
+function fix_relative_urls($html, $source_url) {
+
+    $base_url = get_base_url($source_url);
+
+    // src="/..."
+    $html = preg_replace(
+        '/(src|href)=["\']\/([^"\']+)["\']/',
+        '$1="' . $base_url . '/$2"',
+        $html
+    );
+
+    // src="images/..."
+    $html = preg_replace(
+        '/(src|href)=["\'](?!http|\/\/)([^"\']+)["\']/',
+        '$1="' . $base_url . '/$2"',
+        $html
+    );
+
+    return $html;
+}
+
+function extract_external_css($html, $source_url) {
+
+    $base_url = get_base_url($source_url);
+    $css = '';
+
+    // Extract <link rel="stylesheet">
+    if (preg_match_all('/<link[^>]+rel=["\']stylesheet["\'][^>]*>/i', $html, $matches)) {
+        foreach ($matches[0] as $link) {
+
+            // Fix relative href
+            $link = preg_replace(
+                '/href=["\']\/([^"\']+)["\']/',
+                'href="' . $base_url . '/$1"',
+                $link
+            );
+
+            $css .= $link . "\n";
+        }
+    }
+
+    // Extract <style> blocks
+    if (preg_match_all('/<style\b[^>]*>(.*?)<\/style>/is', $html, $styles)) {
+        foreach ($styles[0] as $style) {
+            $css .= $style . "\n";
+        }
+    }
+
+    return $css;
+}
+function inject_external_css_into_head() {
+
+    if (!is_singular('campaign')) return;
+
+    $url = rwmb_meta('campaign_external_url');
+    if (!$url) return;
+
+    $raw_html = wp_external_page_fetch($url);
+    if (!$raw_html) return;
+
+    echo extract_external_css($raw_html, $url);
+}
+add_action('wp_body_open', 'inject_external_css_into_head', 20);
+
+add_shortcode('campaign-float-form', function ($atts = []) {
+    
+    static $loaded = false;
+
+    $atts = shortcode_atts([
+        'text' => 'Campaign Form',
+        'form_id' => '1c318af', 
+        'form_title' => 'Campaign Form',
+    ], $atts);
+
+    ob_start();
+    ?>
+
+    <!-- FLOATING BUTTON -->
+    <a class="campaign-float-btn" data-bs-toggle="modal" data-bs-target="#campaignFormModal">
+        <span class="campaign-float-text"><?php echo esc_html($atts['text']); ?></span>
+        <svg class="campaign-float-arrow" viewBox="0 0 32 32">
+            <g data-name="Layer 2">
+                <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z" 
+                    class="fill-000000"></path>
+                <path
+                    d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 0-1.41 1 1 0 0 1 1.41 0l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z"
+                    class="fill-000000"></path>
+            </g>
+        </svg>
+
+    </a>
+
+    <?php
+    if (!$loaded) :
+        $loaded = true;
+
+        add_action('wp_footer', function () use ($atts) { ?>
+            <!-- MODAL -->
+            <div class="modal fade" id="campaignFormModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content p-4">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h2 class="modal-title section-title m-0 pb-5" id="exampleModalLabel">Campaign Form</h2>
+                        <button type="button" class="close close-btn" data-bs-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body pt-0">                        
+                        <?php echo do_shortcode('[contact-form-7 id="1c318af" title="Join Team Form"]'); ?>                       
+                    </div>
+
+                </div>
+                </div>
+            </div>
+        <?php });
+    endif;
+
+    return ob_get_clean();
+});
 
 

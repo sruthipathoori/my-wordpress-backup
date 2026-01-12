@@ -3,7 +3,7 @@
 get_header();
 ?>
 <!-- innerHero Section -->
-<section class="innerHero-section" style="background-image: url(<?php echo get_template_directory_uri().'/assets/images/contact-banner.jpg'?>);">
+<section class="innerHero-section" style="background-image: url('http://localhost/wordpress/wp-content/uploads/2025/12/contact-banner-scaled-1.jpg');">
         <div class="container">
 		
            <div class="innerBanner-text">

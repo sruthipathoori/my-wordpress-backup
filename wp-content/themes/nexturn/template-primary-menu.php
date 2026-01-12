@@ -100,7 +100,7 @@ if ($post) {
                         d="M76.884,224H65.116c-.616,0-1.116.67-1.116,1.5s.5,1.5,1.116,1.5H76.884c.616,0,1.116-.67,1.116-1.5S77.5,224,76.884,224Z"
                         transform="translate(-64 -224)" fill="#fff" />
                 </svg>
-</a>
+        </a>
 
         <ul class="dropdown-menu">
             <div class="dropdown-style">
@@ -144,7 +144,7 @@ if ($post) {
             </svg>
         </a>
 
-        <ul class="dropdown-menu">
+        <ul class="dropdown-menu ">
             <div class="dropdown-style">
                 <li><a class="dropdown-item <?php echo $post_slug == 'salesforce-agentforce' ? ' active' : '' ?>"
                         href="<?php echo site_url('salesforce-agentforce'); ?>">Agentforce <svg width="14" height="14"
@@ -153,11 +153,19 @@ if ($post) {
                                 fill="white" />
                         </svg></a></li>
                 <li><a class="dropdown-item <?php echo $post_slug == 'oracle-netsuite' ? ' active' : '' ?>"
-                        href="<?php echo site_url('oracle-netsuite'); ?>">Oracle <svg width="14" height="14" viewBox="0 0 14 14"
+                        href="<?php echo site_url('oracle-netsuite'); ?>">Oracle-Netsuite <svg width="14" height="14" viewBox="0 0 14 14"
                             fill="none" class="mobile-arrow" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12.079 7.5L6.286 13.292L7 14L14 7L7 0L6.286 0.708L12.08 6.5H0V7.5H12.079Z"
                                 fill="white" />
                         </svg></a></li>
+                <li><a class="dropdown-item <?php echo $post_slug == 'oracle-ebs' ? ' active' : '' ?>"
+                        href="<?php echo site_url('oracle-ebs'); ?>">Oracle EBS <svg width="14" height="14" viewBox="0 0 14 14"
+                            fill="none" class="mobile-arrow" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12.079 7.5L6.286 13.292L7 14L14 7L7 0L6.286 0.708L12.08 6.5H0V7.5H12.079Z"
+                                fill="white" />
+                        </svg>
+                    </a>
+                </li>
             </div>
         </ul>
     </li>

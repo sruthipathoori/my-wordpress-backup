@@ -58,7 +58,7 @@
     <nav
         class="navbar navbar-expand-lg navbar-dark fixed-top <?php if ( is_admin_bar_showing() ) { echo ' admin-step'; } ?>">
         <div class="container">
-            <a class="navbar-brand" href="<?php echo site_url(home_url("/")); ?>">
+            <a class="navbar-brand" href="http://localhost/wordpress/home">
             <img src="http://localhost/wordpress/wp-content/uploads/2025/11/site_logo-scaled-1.png" alt="Nexturn Logo">
 				
 				<!-- <svg width="100%" height="29" viewBox="0 0 186 29" fill="none" xmlns="http://www.w3.org/2000/svg">
