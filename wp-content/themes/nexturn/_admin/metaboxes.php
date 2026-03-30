@@ -216,69 +216,132 @@ function nexturn_register_meta_boxes($meta_boxes)
         'autosave' => true,
         'fields' => array(
             array(
-                'name' => __('Summary Description', 'your-prefix'),
+                'name' => __('Short Summary (Card text)', 'your-prefix'),
                 'id' => "{$resource_prefix}summary",
                 'type' => 'wysiwyg',
                 'options' => array(
                     'textarea_rows' => 5,
                     'media_buttons' => false,
                     'teeny' => false,
-                    'wpautop' => false
+                    'wpautop' => false,
                 ),
                 'desc' => __('Short summary used on Resource Center cards.', 'your-prefix'),
             ),
             array(
-                'name' => __('Description', 'your-prefix'),
+                'name' => __('Full Resource Description (for single page and PDF)', 'your-prefix'),
                 'id' => "{$resource_prefix}text",
                 'type' => 'wysiwyg',
                 'options' => array(
-                    'textarea_rows' => 10,
-                    'media_buttons' => false,
+                    'textarea_rows' => 15,
+                    'media_buttons' => true,
                     'teeny' => false,
-                    'wpautop' => false
+                    'wpautop' => true,
                 ),
+                'desc' => __('Use this for rich content and multiple images.', 'your-prefix'),
             ),
             array(
-                'name' => __('Image', 'your-prefix'),
+                'name' => __('Card image', 'your-prefix'),
                 'id' => "{$resource_prefix}image",
                 'type' => 'image_advanced',
                 'max_file_uploads' => 1,
+                'desc' => __('Image appearing on cards and hero', 'your-prefix'),
+            ),
+            array(
+                'name' => __('Published Date', 'your-prefix'),
+                'id' => "{$resource_prefix}date",
+                'type' => 'date',
+                'js_options' => array(
+                    'dateFormat' => 'yy-mm-dd'
+                ),
+                'desc' => __('Optional override for card date, otherwise post date shown.', 'your-prefix'),
             ),
         )
     );
-    add_filter('rwmb_meta_boxes', 'campaign_meta_boxes');
+    
+    // $resource_prefix = 'resource_';
+    // $meta_boxes[] = array(
+    //     'id' => 'resource_info',
+    //     'title' => __('Resource Information', 'your-prefix'),
+    //     'post_types' => array('resource'),
+    //     'context' => 'normal',
+    //     'priority' => 'high',
+    //     'autosave' => true,
+    //     'fields' => array(
+    //         array(
+    //             'name' => __('Summary Description', 'your-prefix'),
+    //             'id' => "{$resource_prefix}summary",
+    //             'type' => 'wysiwyg',
+    //             'options' => array(
+    //                 'textarea_rows' => 5,
+    //                 'media_buttons' => false,
+    //                 'teeny' => false,
+    //                 'wpautop' => false
+    //             ),
+    //             'desc' => __('Short summary used on Resource Center cards.', 'your-prefix'),
+    //         ),
+    //         // array(
+    //         //     'name' => __('Description', 'your-prefix'),
+    //         //     'id' => "{$resource_prefix}text",
+    //         //     'type' => 'wysiwyg',
+    //         //     'options' => array(
+    //         //         'textarea_rows' => 10,
+    //         //         'media_buttons' => false,
+    //         //         'teeny' => false,
+    //         //         'wpautop' => false
+    //         //     ),
+    //         // ),
+    //         array(
+    //             'name' => __('Image', 'your-prefix'),
+    //             'id' => "{$resource_prefix}image",
+    //             'type' => 'image_advanced',
+    //             'max_file_uploads' => 1,
+    //         ),
+    //     )
+    // );
 
-    $campaign_prefix = 'campaign_';
+    
+    $faq_prefix = 'faq_';
 
     $meta_boxes[] = array(
-        'id'         => 'campaign_info',
-        'title'      => __('Campaign Information', 'your-prefix'),
-        'post_types' => array('campaign'),
-        'context'    => 'normal',
-        'priority'   => 'high',
-        'autosave'   => true,
-        'fields'     => array(
+        'id' => 'faq_info',
+        'title' => __('FAQ Information', 'your-prefix'),
+        'post_types' => array('faq'),
+        'context' => 'normal',
+        'priority' => 'high',
+        'autosave' => true,
+
+        'fields' => array(
 
             array(
-                'name' => __('External Page URL', 'your-prefix'),
-                'id'   => "{$campaign_prefix}external_url",
-                'type' => 'url',
-                'desc' => __('Paste the external webpage URL. Content will be fetched automatically.', 'your-prefix'),
-            ),
+                'id' => "{$faq_prefix}items",
+                'type' => 'group',
+                'name' => __('FAQs', 'your-prefix'),
 
-            array(
-                'name' => __('Intro Content (Optional)', 'your-prefix'),
-                'id'   => "{$campaign_prefix}intro",
-                'type' => 'wysiwyg',
-                'options' => array(
-                    'textarea_rows' => 5,
-                    'media_buttons' => false,
-                    'teeny'         => false,
-                    'wpautop'       => false,
+                'clone' => true,
+                'sort_clone' => true,
+                'add_button' => __('Add FAQ', 'your-prefix'),
+
+                'fields' => array(
+
+                    array(
+                        'name' => __('Question', 'your-prefix'),
+                        'id' => 'question',
+                        'type' => 'text',
+                        'size' => 75,
+                    ),
+
+                    array(
+                        'name' => __('Answer', 'your-prefix'),
+                        'id' => 'answer',
+                        'type' => 'textarea',
+                        'rows' => 6,
+                        'cols' => 70,
+                    ),
+
                 ),
-                'desc' => __('Content shown above the fetched external page.', 'your-prefix'),
             ),
-        ),
+
+        )
     );
     
 

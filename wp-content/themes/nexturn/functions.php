@@ -13,6 +13,7 @@ define("TEAM_MEMBER_PREFIX", "nexturn_team_");
 define("TESTIMONIAL_PREFIX", "nexturn_testimonial_");
 define("JOB_POST_PREFIX", "nexturn_job_post_");
 define("IMPACT_STORY_PREFIX", "nex_impact_story_");
+// define('FAQ_PREFIX', 'nexturn_faq_');
 
 if (!function_exists('nexturn_theme_setup')):
     function nexturn_theme_setup()
@@ -370,7 +371,7 @@ function my_add_form_tag_submit()
 
 function my_submit_form_tag_handler($tag): string
 {
-    return '<button class="wpcf7-form-control wpcf7-submit has-spinner btn btn-submit" type="submit">Submit <span class="ms-2">→</span></button>';
+    return '<button class="wpcf7-form-control wpcf7-submit has-spinner btn btn-submit" type="submit">  <span class="ms-2">→</span></button>';
 }
 
 add_filter('shortcode_atts_wpcf7', 'custom_shortcode_atts_wpcf7_filter', 10, 3);
@@ -644,7 +645,7 @@ function handle_live_search()
 add_shortcode('partner-with-us', function () {
     ob_start(); ?>
     <a class="svg-container action-click cta-btn" data-bs-target="#partner_contact_modal" data-bs-toggle="modal">
-        <span class="pe-3">Partner with us</span>
+        <span class="pe-3">Talk To Us</span>
         <svg class="home-bn-arrow home-bn-arrow-sec" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
             <g data-name="Layer 2">
                 <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z"
@@ -667,7 +668,7 @@ add_shortcode('partners-btn', function ($atts = []) {
     ob_start();
     ?>
     <a class="svg-container partner-btn" data-bs-toggle="modal" data-bs-target="#partner_contact_modal">
-        <span class="pe-3">Partner With Us</span>
+        <span class="pe-3">Talk To Us</span>
         <svg class="home-bn-arrow home-bn-arrow-sec" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
             <g data-name="Layer 2">
                 <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z"
@@ -1178,210 +1179,224 @@ add_action('wp_enqueue_scripts', function () {
     wp_enqueue_script('resources-section', get_template_directory_uri() . '/assets/js/resources-section.js', ['jquery'], '1.0.0', true);
 });
 
-// Functions for campaign page 
-function wp_external_page_fetch($url) {
+//FAQ Shortcode for all pages
+function nexturn_faq_shortcode($atts){
 
-    if (empty($url)) {
-        return false;
-    }
+$atts = shortcode_atts(array(
+'id' => 0
+), $atts);
 
-    $response = wp_remote_get($url, array(
-        'timeout' => 30,
-        'redirection' => 5,
-        'sslverify' => false, // IMPORTANT for many external sites
-        'headers' => array(
-            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-        ),
-    ));
+$post_id = intval($atts['id']);
 
-    if (is_wp_error($response)) {
-        error_log('WP Remote Get Error: ' . $response->get_error_message());
-        return false;
-    }
+$faq_items = rwmb_meta('nexturn_faq_items', '', $post_id);
 
-    $status = wp_remote_retrieve_response_code($response);
-    if ($status !== 200) {
-        error_log('HTTP Status: ' . $status);
-        return false;
-    }
+if(empty($faq_items)) return '';
 
-    $html = wp_remote_retrieve_body($response);
-    if (empty($html)) {
-        error_log('Empty HTML response');
-        return false;
-    }
+$left = [];
+$right = [];
 
-    return $html; // RETURN FULL HTML FIRST
+foreach($faq_items as $i => $item){
+if($i % 2 == 0){
+$left[] = $item;
+}else{
+$right[] = $item;
+}
 }
 
+ob_start();
+?>
 
-function get_base_url($url) {
-    $parts = parse_url($url);
-    return $parts['scheme'] . '://' . $parts['host'];
+<div class="nexturn-faq-wrapper">
+
+<div class="faq-column">
+
+<?php foreach($left as $item): ?>
+
+<div class="nexturn-faq-item">
+
+<div class="nexturn-faq-question">
+<span><?php echo esc_html($item['question']); ?></span>
+<span class="nexturn-faq-icon">⌄</span>
+</div>
+
+<div class="nexturn-faq-answer">
+<?php echo wp_kses_post($item['answer']); ?>
+</div>
+
+</div>
+
+<?php endforeach; ?>
+
+</div>
+
+
+<div class="faq-column">
+
+<?php foreach($right as $item): ?>
+
+<div class="nexturn-faq-item">
+
+<div class="nexturn-faq-question">
+<span><?php echo esc_html($item['question']); ?></span>
+<span class="nexturn-faq-icon">⌄</span>
+</div>
+
+<div class="nexturn-faq-answer">
+<?php echo wp_kses_post($item['answer']); ?>
+</div>
+
+</div>
+
+<?php endforeach; ?>
+
+</div>
+
+</div>
+
+<?php
+return ob_get_clean();
 }
-function extract_clean_body_content($html) {
+add_shortcode('faq','nexturn_faq_shortcode');
 
-    if (empty($html)) {
-        return false;
-    }
 
-    libxml_use_internal_errors(true);
+//Resource Cards Shortcode for all pages
+function nexturn_render_resource_card($resource) {
+    $group_terms = get_the_terms($resource->ID, 'resource_group');
+    $group_slug = !empty($group_terms) && !is_wp_error($group_terms) ? $group_terms[0]->slug : '';
+    $group_name = !empty($group_terms) && !is_wp_error($group_terms) ? $group_terms[0]->name : '';
 
-    $dom = new DOMDocument();
-    $dom->loadHTML('<?xml encoding="utf-8" ?>' . $html);
+    $summary = rwmb_meta('resource_summary', [], $resource->ID);
+    $full = rwmb_meta('resource_text', [], $resource->ID);
+    $card_text = !empty($summary) ? wp_trim_words(strip_tags($summary), 30, '...') : wp_trim_words(strip_tags($full), 30, '...');
+    $image_meta = rwmb_meta('resource_image', ['size' => 'large'], $resource->ID);
+    $image_url = ($image_meta && is_array($image_meta)) ? reset($image_meta)['url'] : get_the_post_thumbnail_url($resource->ID, 'large');
 
-    libxml_clear_errors();
+    $date = rwmb_meta('resource_date', [], $resource->ID);
+    $display_date = !empty($date) ? date('M j, Y', strtotime($date)) : get_the_date('M j, Y', $resource->ID);
 
-    $xpath = new DOMXPath($dom);
+   $is_read = in_array($group_slug, ['announcement','announcements','blog','blogs']);
 
-    // REMOVE HEADER, NAV, FOOTER
-    $remove_tags = ['header', 'nav', 'footer'];
+$cta_label = $is_read ? 'Read More' : 'Download';
 
-    foreach ($remove_tags as $tag) {
-        $nodes = $xpath->query("//{$tag}");
-        foreach ($nodes as $node) {
-            $node->parentNode->removeChild($node);
-        }
-    }
+$cta_link = $is_read ? get_permalink($resource->ID) : '#';
 
-    // OPTIONAL: remove scripts & styles (recommended)
-    // foreach ($xpath->query('//script | //style') as $node) {
-    //     $node->parentNode->removeChild($node);
-    // }
+$cta_attrs = $is_read 
+    ? '' 
+    : 'data-bs-toggle="modal" data-bs-target="#resource_form_modal"';
+    $cta_link = in_array($group_slug, ['announcement','blogs']) ? get_permalink($resource->ID) : 'javascript:void(0)';
+    $cta_attrs = in_array($group_slug, ['announcement','blogs']) 
+        ? ''
+        : 'data-bs-toggle="modal" data-bs-target="#resource_form_modal" data-resource-id="' . esc_attr($resource->ID) . '"';
 
-    // GET BODY CONTENT
-    $body = $dom->getElementsByTagName('body')->item(0);
-
-    if (!$body) {
-        return false;
-    }
-
-    $clean_html = '';
-    foreach ($body->childNodes as $child) {
-        $clean_html .= $dom->saveHTML($child);
-    }
-
-    return $clean_html;
+    ob_start(); ?>
+    <div class="resource-card">
+        <div class="resource-card-img"><img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr(get_the_title($resource)); ?>"></div>
+        <div class="resource-card-content">
+            <?php if ($group_name): ?><div class="resource-meta"><?php echo esc_html($group_name); ?></div><?php endif; ?>
+            <h4 class="resource-title"><?php echo esc_html(get_the_title($resource)); ?></h4>
+            <div class="resource-date"><?php echo esc_html($display_date); ?></div>
+            <p class="resource-desc"><?php echo esc_html($card_text); ?></p>
+            <div class="resource-actions">
+                <a class="btn resource-cta" href="<?php echo esc_url($cta_link); ?>" <?php echo $cta_attrs; ?>>
+                    <?php echo esc_html($cta_label); ?>
+                </a>
+            </div>
+        </div>
+    </div>
+    <?php
+    return ob_get_clean();
 }
 
-function fix_relative_urls($html, $source_url) {
-
-    $base_url = get_base_url($source_url);
-
-    // src="/..."
-    $html = preg_replace(
-        '/(src|href)=["\']\/([^"\']+)["\']/',
-        '$1="' . $base_url . '/$2"',
-        $html
-    );
-
-    // src="images/..."
-    $html = preg_replace(
-        '/(src|href)=["\'](?!http|\/\/)([^"\']+)["\']/',
-        '$1="' . $base_url . '/$2"',
-        $html
-    );
-
-    return $html;
-}
-
-function extract_external_css($html, $source_url) {
-
-    $base_url = get_base_url($source_url);
-    $css = '';
-
-    // Extract <link rel="stylesheet">
-    if (preg_match_all('/<link[^>]+rel=["\']stylesheet["\'][^>]*>/i', $html, $matches)) {
-        foreach ($matches[0] as $link) {
-
-            // Fix relative href
-            $link = preg_replace(
-                '/href=["\']\/([^"\']+)["\']/',
-                'href="' . $base_url . '/$1"',
-                $link
-            );
-
-            $css .= $link . "\n";
-        }
-    }
-
-    // Extract <style> blocks
-    if (preg_match_all('/<style\b[^>]*>(.*?)<\/style>/is', $html, $styles)) {
-        foreach ($styles[0] as $style) {
-            $css .= $style . "\n";
-        }
-    }
-
-    return $css;
-}
-function inject_external_css_into_head() {
-
-    if (!is_singular('campaign')) return;
-
-    $url = rwmb_meta('campaign_external_url');
-    if (!$url) return;
-
-    $raw_html = wp_external_page_fetch($url);
-    if (!$raw_html) return;
-
-    echo extract_external_css($raw_html, $url);
-}
-add_action('wp_body_open', 'inject_external_css_into_head', 20);
-
-add_shortcode('campaign-float-form', function ($atts = []) {
-    
-    static $loaded = false;
-
+function nexturn_resource_cards($atts) {
     $atts = shortcode_atts([
-        'text' => 'Campaign Form',
-        'form_id' => '1c318af', 
-        'form_title' => 'Campaign Form',
+        'group' => '',
+        'posts_per_page' => 9,
+        'orderby' => 'date',
+        'order' => 'DESC',
     ], $atts);
 
+    $args = [
+        'post_type' => 'resource',
+        'post_status' => 'publish',
+        'posts_per_page' => intval($atts['posts_per_page']),
+        'orderby' => $atts['orderby'],
+        'order' => $atts['order'],
+    ];
+
+    if (!empty($atts['group'])) {
+        $args['tax_query'] = [[
+            'taxonomy' => 'resource_group',
+            'field' => 'slug',
+            'terms' => sanitize_title($atts['group']),
+        ]];
+    }
+
+    $query = new WP_Query($args);
     ob_start();
-    ?>
 
-    <!-- FLOATING BUTTON -->
-    <a class="campaign-float-btn" data-bs-toggle="modal" data-bs-target="#campaignFormModal">
-        <span class="campaign-float-text"><?php echo esc_html($atts['text']); ?></span>
-        <svg class="campaign-float-arrow" viewBox="0 0 32 32">
-            <g data-name="Layer 2">
-                <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z" 
-                    class="fill-000000"></path>
-                <path
-                    d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 0-1.41 1 1 0 0 1 1.41 0l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z"
-                    class="fill-000000"></path>
-            </g>
-        </svg>
+    echo '<div class="resource-card-grid">';
+    if ($query->have_posts()) {
+        while ($query->have_posts()) {
+            $query->the_post();
+            global $post;
+            echo nexturn_render_resource_card($post);
+        }
+    } else {
+        echo '<div class="no-resource">No resources found.</div>';
+    }
+    echo '</div>';
 
-    </a>
+    wp_reset_postdata();
+    return ob_get_clean();
+}
+add_shortcode('resource_cards', 'nexturn_resource_cards');
 
+function nexturn_resource_category_page($atts) {
+    $atts = shortcode_atts([
+        'group' => 'announcement',
+        'title' => '',
+        'banner' => '',
+    ], $atts);
+
+    $group_name = ucfirst(str_replace('-', ' ', $atts['group']));
+    $title = !empty($atts['title']) ? $atts['title'] : $group_name;
+    $banner = !empty($atts['banner']) ? esc_url($atts['banner']) : get_template_directory_uri() . '/assets/images/default-resource-banner.jpg';
+
+    ob_start(); ?>
+    <section class="resource-hero-banner" style="background-image:url('<?php echo esc_url($banner); ?>')">
+        <div class="hero-content container">
+            <div class="hero-breadcrumb"><a href="<?php echo esc_url(site_url('/')); ?>">Home</a> / <span>Resource Center</span> / <span><?php echo esc_html($group_name); ?></span></div>
+            <div class="hero-title"><?php echo esc_html($title); ?></div>
+        </div>
+    </section>
+    <section class="container my-5">
+        <?php echo do_shortcode('[resource_cards group="' . esc_attr($atts['group']) . '" posts_per_page="12"]'); ?>
+    </section>
     <?php
-    if (!$loaded) :
-        $loaded = true;
+    return ob_get_clean();
+}
+add_shortcode('resource_category_page', 'nexturn_resource_category_page');
+add_action('wp_footer', 'nexturn_global_resource_modal');
 
-        add_action('wp_footer', function () use ($atts) { ?>
-            <!-- MODAL -->
-            <div class="modal fade" id="campaignFormModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-centered">
-                    <div class="modal-content p-4">
-                    <div class="modal-header border-bottom-0 pb-0">
-                        <h2 class="modal-title section-title m-0 pb-5" id="exampleModalLabel">Campaign Form</h2>
-                        <button type="button" class="close close-btn" data-bs-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body pt-0">                        
-                        <?php echo do_shortcode('[contact-form-7 id="1c318af" title="Join Team Form"]'); ?>                       
-                    </div>
+function nexturn_global_resource_modal() {
+?>
+<div class="modal fade" id="resource_form_modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content p-4">
 
-                </div>
+            <div class="modal-header border-0 pb-0">
+                <h2 class="modal-title">Download Resource</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div id="resource-form">
+                    <?php echo do_shortcode('[contact-form-7 id="0e81076" title="Resource form"]'); ?>
                 </div>
             </div>
-        <?php });
-    endif;
 
-    return ob_get_clean();
-});
-
-
+        </div>
+    </div>
+</div>
+<?php
+}

@@ -3,7 +3,7 @@
     <div class="modal-dialog modal-xl">
         <div class="modal-content p-3">
             <div class="modal-header border-bottom-0 pb-0">
-                <h2 class="modal-title section-title m-0 pb-5" id="partner_contact_modal_label">Partner With Us</h2>
+                <h2 class="modal-title section-title m-0 pb-5" id="partner_contact_modal_label">Talk To Us</h2>
                 <button type="button" class="close close-btn" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>

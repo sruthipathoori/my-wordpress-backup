@@ -256,7 +256,10 @@ function resource_init() {
     register_post_type('resource', $args );
 }
 
-// Register taxonomy "resource_group" for Resource (like "group" for impact stories)
+// Register taxonomy "resource_group" for Resource
+// register_post_type('resource', [
+//     'supports' => ['title', 'editor', 'thumbnail'],
+// ]);
 add_action('init', 'resource_group_taxonomy_init');
 function resource_group_taxonomy_init() {
     $labels = array(
@@ -283,28 +286,24 @@ function resource_group_taxonomy_init() {
     register_taxonomy('resource_group', array('resource'), $args );
 }
 
-add_action('init', 'campaign_post_type_init');
-function campaign_post_type_init() {
+
+add_action('init', 'nexturn_register_faq_group_cpt');
+function nexturn_register_faq_group_cpt() {
 
     $labels = array(
-        'name'          => __('Campaigns'),
-        'singular_name' => __('Campaign'),
-        'add_new_item'  => __('Add New Campaign'),
-        'edit_item'     => __('Edit Campaign'),
-        'menu_name'     => __('Campaigns'),
+        'name'          => 'FAQ Groups',
+        'singular_name' => 'FAQ Group',
+        'menu_name'     => 'FAQ',
+        'add_new'       => 'Add New FAQ Group',
     );
 
     $args = array(
         'labels'        => $labels,
-        'public'        => true,
+        'public'        => false,
         'show_ui'       => true,
-        'menu_icon'     => 'dashicons-megaphone',
-        'supports'      => array('title'),
-        'has_archive'   => true,
-        'rewrite'       => array('slug' => 'campaign'),
-        'show_in_rest'  => true,
+        'menu_icon'     => 'dashicons-editor-help',
+        'supports'      => array('title')
     );
 
-    register_post_type('campaign', $args);
+    register_post_type('faq_group', $args);
 }
-

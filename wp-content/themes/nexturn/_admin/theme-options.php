@@ -156,6 +156,9 @@ $args = array(
     'network_admin' => true,
     'search' => true,
 );
+if (is_admin()) {
+    Redux::set_args($opt_name, $args);
+}
 
 Redux::set_args($opt_name, $args);
 

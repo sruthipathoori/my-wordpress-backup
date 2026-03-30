@@ -305,11 +305,11 @@ document.addEventListener('DOMContentLoaded', function () {
     //     }
     // });
 
-
-
-    document.addEventListener('wpcf7mailsent', function () {
-        showCF7Popup("Thank you for your interest.<br/>A NexTurner will reach out to you soon.", "success");
-    });
+    document.addEventListener('wpcf7mailsent', function (event) {
+    if (event.detail.contactFormId == e6838f1) {
+        window.location.href = "/thank-you";
+    }
+});
 
     document.addEventListener('wpcf7invalid', function () {
         showCF7Popup("Please fill in all required fields correctly.", "error");
@@ -665,65 +665,74 @@ if(typeof multipleItemCarousel != 'undefined' && multipleItemCarousel != null ){
 
 
 // Popup functionality
-document.addEventListener("DOMContentLoaded", () => {
+// document.addEventListener("DOMContentLoaded", () => {
 
-    const popup = document.getElementById("resource-popup");
-    const popupTitle = document.getElementById("popup-title");
-    const popupGrid = document.getElementById("popup-grid");
-    const closeBtn = document.querySelector(".popup-close");
+//     const popup = document.getElementById("resource-popup");
+//     const popupTitle = document.getElementById("popup-title");
+//     const popupGrid = document.getElementById("popup-grid");
+//     const closeBtn = document.querySelector(".popup-close");
 
-    function openPopup(title, listHTML) {
+//     function openPopup(title, listHTML) {
 
-        popupTitle.textContent = title;
+//         popupTitle.textContent = title;
 
-        popupGrid.innerHTML = "";
+//         popupGrid.innerHTML = "";
 
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(`<ul>${listHTML}</ul>`, "text/html");
-        const items = doc.querySelectorAll("li");
+//         const parser = new DOMParser();
+//         const doc = parser.parseFromString(`<ul>${listHTML}</ul>`, "text/html");
+//         const items = doc.querySelectorAll("li");
 
-        items.forEach(li => {
-            const link = li.querySelector("a");
-            const thumb = li.dataset.thumb || "";
+//         items.forEach(li => {
+//             const link = li.querySelector("a");
+//             const thumb = li.dataset.thumb || "";
 
-            const card = document.createElement("div");
-            card.className = "popup-item";
+//             const card = document.createElement("div");
+//             card.className = "popup-item";
 
-            card.innerHTML = `
-                <img class="popup-thumb" src="${thumb}">
-                <div class="blue-stroke"></div>
-                <div class="popup-title-text">${link.textContent}</div>
-            `;
+//             card.innerHTML = `
+//                 <img class="popup-thumb" src="${thumb}">
+//                 <div class="blue-stroke"></div>
+//                 <div class="popup-title-text">${link.textContent}</div>
+//             `;
 
-            card.onclick = () => window.open(link.href, "_blank");
+//             card.onclick = () => window.open(link.href, "_blank");
 
-            popupGrid.appendChild(card);
-        });
+//             popupGrid.appendChild(card);
+//         });
 
-        popup.classList.add("active");
-    }
+//         popup.classList.add("active");
+//     }
 
-    document.addEventListener("click", e => {
+//     document.addEventListener("click", e => {
 
-        const el = e.target.closest(".resource-group-tile, .carousel-item, .resource-group-name");
-        if (!el) return;
+//         const el = e.target.closest(".resource-group-tile, .carousel-item, .resource-group-name");
+//         if (!el) return;
 
-        const container =
-            el.closest(".resource-group-tile") ||
-            el.closest(".carousel-item");
+//         const container =
+//             el.closest(".resource-group-tile") ||
+//             el.closest(".carousel-item");
 
-        const title = container.dataset.groupName;
-        const listHTML = container.querySelector(".hidden-resource-list").innerHTML;
+//         const title = container.dataset.groupName;
+//         const listHTML = container.querySelector(".hidden-resource-list").innerHTML;
 
-        openPopup(title, listHTML);
-    });
+//         openPopup(title, listHTML);
+//     });
 
-    closeBtn.addEventListener("click", () => popup.classList.remove("active"));
-    popup.addEventListener("click", e => {
-        if (e.target === popup) popup.classList.remove("active");
-    });
+//     closeBtn.addEventListener("click", () => popup.classList.remove("active"));
+//     popup.addEventListener("click", e => {
+//         if (e.target === popup) popup.classList.remove("active");
+//     });
 
+// });
+
+// FAQ Accordion//
+document.addEventListener("DOMContentLoaded", function(){
+document.querySelectorAll(".nexturn-faq-question").forEach(function(btn){
+btn.addEventListener("click", function(){
+let parent = this.closest(".nexturn-faq-item");
+parent.classList.toggle("active");
 });
-
+});
+});
 
 

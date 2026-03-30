@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
-
+    
 <head>
     <meta charset="<?php bloginfo( 'charset' ); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
+    
     <?php wp_head(); ?>
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-TSS74GRH62"></script>
@@ -18,7 +19,8 @@
 </head>
 
 <body>
-    <?php wp_body_open(); ?>
+      <?php wp_body_open(); ?>
+
     <!-- Navigation
     <nav
         class="navbar navbar-expand-lg navbar-dark fixed-top <?php //if ( is_admin_bar_showing() ) { echo 'admin-step'; } ?>">
@@ -59,7 +61,7 @@
         class="navbar navbar-expand-lg navbar-dark fixed-top <?php if ( is_admin_bar_showing() ) { echo ' admin-step'; } ?>">
         <div class="container">
             <a class="navbar-brand" href="http://localhost/wordpress/home">
-            <img src="http://localhost/wordpress/wp-content/uploads/2025/11/site_logo-scaled-1.png" alt="Nexturn Logo">
+            <img src="http://localhost/wordpress/wp-content/uploads/2026/01/LOGO_White_WT.png" alt="Nexturn Logo">
 				
 				<!-- <svg width="100%" height="29" viewBox="0 0 186 29" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M55.7866 0.962158H52.7642L61.2586 14.0078C61.2589 14.0073 62.1015 13.0206 62.935 12.0732L55.7866 0.962158Z" fill="white"/>
@@ -75,7 +77,7 @@
 
             </a>
             <div class="mobile-header-right">
-                 <button class="btn px-2 mobile-src">
+                <button class="btn px-2 mobile-src">
                     <svg width="22" height="22" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path
                             d="M17 17L13.1396 13.1396M13.1396 13.1396C13.7999 12.4793 14.3237 11.6953 14.6811 10.8326C15.0385 9.96978 15.2224 9.04507 15.2224 8.11121C15.2224 7.17735 15.0385 6.25264 14.6811 5.38987C14.3237 4.5271 13.7999 3.74316 13.1396 3.08283C12.4793 2.42249 11.6953 1.89868 10.8326 1.54131C9.96978 1.18394 9.04507 1 8.11121 1C7.17735 1 6.25264 1.18394 5.38987 1.54131C4.5271 1.89868 3.74316 2.42249 3.08283 3.08283C1.74921 4.41644 1 6.2252 1 8.11121C1 9.99722 1.74921 11.806 3.08283 13.1396C4.41644 14.4732 6.2252 15.2224 8.11121 15.2224C9.99722 15.2224 11.806 14.4732 13.1396 13.1396Z"

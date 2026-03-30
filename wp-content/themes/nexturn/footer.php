@@ -3,7 +3,7 @@ global $nexturn_opt; ?>
 <footer class="bg-dark text-white pt-5">
   <div class="container">
     <div class="row footer-main-row">
-      <!-- Left column - Offices information -->
+      <!-- Offices information -->
       <div class="col-md-3 footer-col footer-divider-right">
         <h2 class="mb-3">Offices</h2>
         <?php
@@ -20,7 +20,7 @@ global $nexturn_opt; ?>
       </div>
       <!--services -->
       <div class="col-md-3 footer-col footer-divider-right">
-        <h2 class="footer-title">Services</h2>
+        <h2 class="footer-title">Technologies</h2>
         <ul class="footer-links">         
           <a href="<?php echo site_url('/cloud-engineering'); ?>">Cloud</a><br>
           <a href="<?php echo site_url('/cloud-engineering/?pos=product-engineering'); ?>">Product Engineering</a><br>
@@ -40,20 +40,21 @@ global $nexturn_opt; ?>
           <a href="<?php echo site_url('/resources'); ?>">Resource Center</a><br>
           <a href="<?php echo site_url('/careers'); ?>">Careers</a><br>
           <a href="<?php echo site_url('/about-us'); ?>">About Us</a><br>
-          <a href="<?php echo site_url('/contact-us'); ?>">Contact Us</a>
+          <a href="<?php echo site_url('/contact-us'); ?>">Contact Us</a><br>
+          <a href="https://apps.nexturn.com/" target="_blank" rel="noopener noreferrer">Solutions</a>
         </ul>
         </div>
       </div>
-      <!-- Right column - Contact info -->
-      <div class="col-md-3 footer-col-brands ">
+
+      <!-- Contact info -->
+      <div class="col-md-3 footer-col ">
         <img 
         src="<?php echo esc_url('http://localhost/wordpress/wp-content/uploads/2025/11/ISO-Badge.png'); ?>"
         alt="ISO Certified" 
         class="iso-badge"
         />
-
         <div class="pb-4"> <a href="<?php echo site_url(); ?>" class="">
-            <img src="<?php echo $nexturn_opt['site_footer_logo']['url'] ?>" alt="Nexturn Logo" width="50">
+            <img src="<?php echo $nexturn_opt['site_footer_logo']['url'] ?>" alt="Nexturn Logo" width="80" loading="eager">
           </a></div>
         <div class="pb-4">
           <?php foreach ($nexturn_opt['contact_emails'] as $email_addr): ?>

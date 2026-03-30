@@ -228,7 +228,7 @@
                             <div id="collapseNine" class="accordion-collapse collapse"
                                 data-bs-parent="#findAnswersAccordion">
                                 <div class="accordion-body p-0">
-
+                                    
                                     Stay updated on the latest opportunities by following NexTurn on <a
                                         href="https://www.linkedin.com/company/nexturn-inc" target="_blank"
                                         rel="noopener">LinkedIn</a>, where we frequently share new openings.
