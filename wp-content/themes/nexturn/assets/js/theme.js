@@ -30,6 +30,8 @@ $(document).ready(function () {
     }
   });
 
+  
+
   //console.log('WWW===>>' + $(window).width());
   if ($(window).width() <= 992) {
     $(".mobile-cloud-button, .dropdown-toggle").click(function () {
@@ -198,10 +200,14 @@ document.addEventListener('DOMContentLoaded', function () {
               pageNameField.value="Contact Us Page";
             } else {
                 try{
-                  menu_link_text = document.querySelector('.nav-link.active').innerText;
+                  let activeLink = document.querySelector('.nav-link.active');
+                  if (!activeLink) {
+                    activeLink = document.querySelector('.dropdown-item.active');
+                  }
+                  menu_link_text = activeLink ? activeLink.innerText : 'Page';
                 } catch(e){
-                  console.log(e);
-                  menu_link_text = document.querySelector('.dropdown-item.active').innerText;
+                  console.log('Menu link error:', e);
+                  menu_link_text = 'Page';
                 }
               
               pageNameField.value = menu_link_text.trim() + ' Page';  
@@ -306,17 +312,44 @@ document.addEventListener('DOMContentLoaded', function () {
     // });
 
     document.addEventListener('wpcf7mailsent', function (event) {
-    if (event.detail.contactFormId == e6838f1) {
-        window.location.href = "/thank-you";
-    }
-});
+        var formId = String(event.detail.contactFormId || '');
+        var resourceFormId = '1304'; // Resource download form
+        var redirectFormIds = ['45', '61', '997', '998', '1304']; // Other forms that redirect
 
-    document.addEventListener('wpcf7invalid', function () {
-        showCF7Popup("Please fill in all required fields correctly.", "error");
+        if (formId === resourceFormId) {
+            // Show success popup for resource form (PDF is also being generated)
+            showCF7Popup("Thank you for your interest! Your download is ready.", "success");
+        } else if (redirectFormIds.includes(formId)) {
+            // Redirect this specific form to thank you page
+            window.location.href = "/thank-you";
+        } else {
+            // Show success popup for all other forms
+            showCF7Popup("Thank you for your interest.<br/>A NexTurner will reach out to you soon.", "success");
+        }
     });
 
-    document.addEventListener('wpcf7mailfailed', function () {
-        showCF7Popup("Oops! Something went wrong.Please try again later.", "error");
+    document.addEventListener('wpcf7invalid', function (event) {
+        var formId = String(event.detail.contactFormId || '');
+        var resourceFormId = 'e1d1acd'; // Don't show error popup for resource form
+        
+        if (formId !== resourceFormId) {
+            showCF7Popup("Please fill in all required fields correctly.", "error");
+        }
+    });
+    
+    //Pop up after downloading the resource
+    document.addEventListener('wpcf7mailfailed', function (event) {
+        var formId = String(event.detail.contactFormId || '');
+        var resourceFormId = '1304';
+        
+        if (formId === resourceFormId) {
+            console.log('Resource form mail failed - showing success popup for PDF download');
+            // Still show success since PDF is generated
+            showCF7Popup("Your resource has been downloaded successfully.", "success");
+            return;
+        }
+        
+        showCF7Popup("Oops! Something went wrong. Please try again later.", "error");
     });
 
     function showCF7Popup(message, type) {
@@ -596,18 +629,24 @@ if(typeof multipleItemCarousel != 'undefined' && multipleItemCarousel != null ){
             threshold: 0.1
         });
 
-        document.querySelector('.btn-signup').addEventListener('click', function (e) {
-          e.preventDefault();
+        var btnSignup = document.querySelector('.btn-signup');
+        if (btnSignup) {
+            btnSignup.addEventListener('click', function (e) {
+              e.preventDefault();
 
-            const email = document.querySelector('input[type="email"]').value;
-            console.log('email==>', email)
-            if (email) {
-                alert('Thank you for signing up! We\'ll be in touch soon.');
-                document.querySelector('input[type="email"]').value = '';
-            } else {
-                alert('Please enter a valid email address.');
-          }
-        });
+                const email = document.querySelector('input[type="email"]');
+                if (email) {
+                    console.log('email==>', email.value);
+                    if (email.value) {
+                        alert('Thank you for signing up! We\'ll be in touch soon.');
+                        email.value = '';
+                    } else {
+                        alert('Please enter a valid email address.');
+                    }
+                }
+            });
+        }
+
         // Observe all scroll-animate elements
         document.querySelectorAll('.scroll-animate').forEach(el => {
             observer.observe(el);
@@ -726,6 +765,7 @@ if(typeof multipleItemCarousel != 'undefined' && multipleItemCarousel != null ){
 // });
 
 // FAQ Accordion//
+
 document.addEventListener("DOMContentLoaded", function(){
 document.querySelectorAll(".nexturn-faq-question").forEach(function(btn){
 btn.addEventListener("click", function(){
@@ -736,3 +776,114 @@ parent.classList.toggle("active");
 });
 
 
+//more resourse carousel
+$('.resource-carousel').owlCarousel({
+    loop: false,
+    margin: 20,
+    nav: true,
+    dots: true,
+    autoplay: false,
+    slideBy: 2,
+    autoplayHoverPause: false,
+    responsiveBaseElement: 'body',
+    navText: [
+        '<i class="fa fa-chevron-left"></i>',
+        '<i class="fa fa-chevron-right"></i>'
+    ],
+
+    responsive: {
+        0: {
+            items: 1,
+            slideBy: 1
+        },
+        700: {
+            items: 2,
+            slideBy: 2
+        },
+        1020: {
+            items: 3,      
+            slideBy: 3     
+        }
+    }
+});
+
+jQuery(document).ready(function ($) {
+
+    let timer;
+
+    // SINGLE INIT FUNCTION
+    function initResourceCarousel() {
+
+        const $carousel = $('.resource-carousel');
+
+        // Destroy ONLY if already initialized
+        if ($carousel.hasClass('owl-loaded')) {
+            $carousel.trigger('destroy.owl.carousel');
+            $carousel.removeClass('owl-loaded');
+            $carousel.find('.owl-stage-outer').children().unwrap();
+        }
+
+        //Re-init clean
+        $carousel.owlCarousel({
+            loop: false,
+            margin: 20,
+            nav: true,
+            dots: true,
+            autoplay: false,
+            navText: [
+                '<i class="fa fa-chevron-left"></i>',
+                '<i class="fa fa-chevron-right"></i>'
+            ],
+            responsive: {
+                0: { items: 1, slideBy: 1 },
+                700: { items: 2, slideBy: 2 },
+                1020: { items: 3, slideBy: 3 }
+            }
+        });
+    }
+
+    // ✅ INITIAL LOAD (ONLY ONCE)
+    initResourceCarousel();
+
+    // =========================
+    // 🔍 SEARCH FUNCTION
+    // =========================
+    $('#resource-keyword-search').on('keyup', function () {
+
+        let keyword = $(this).val().trim();
+
+        clearTimeout(timer);
+
+        timer = setTimeout(function () {
+
+            var group = $('#resource-page-layout').data('resource-group') || '';
+
+            $.ajax({
+                url: ajax_object.ajax_url,
+                type: "POST",
+                data: {
+                    action: "resource_keyword_search",
+                    keyword: keyword,
+                    group: group
+                },
+
+                success: function (response) {
+
+                    // ✅ Replace entire section
+                    $('#resource-results').html(response);
+
+                    // ✅ Re-init AFTER DOM update
+                    setTimeout(function () {
+                        initResourceCarousel();
+                    }, 50);
+                },
+
+                error: function () {
+                    $('#resource-results').html('<p>Error loading results</p>');
+                }
+            });
+
+        }, 400);
+    });
+
+});

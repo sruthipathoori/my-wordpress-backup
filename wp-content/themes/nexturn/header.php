@@ -7,6 +7,11 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     
     <?php wp_head(); ?>
+
+    <!-- Google Fonts preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">;
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>;
+
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-TSS74GRH62"></script>
     <script>
@@ -15,7 +20,10 @@
         gtag('js', new Date());
         gtag('config', 'G-TSS74GRH62');
     </script>
+    <!-- Font Awesome (non-blocking) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <link rel="preload" as="image" href="http://localhost/wordpress/wp-content/uploads/2026/04/home-banner-scaled-2-1.webp">
 </head>
 
 <body>

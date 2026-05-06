@@ -251,8 +251,8 @@ if ($post) {
 
         <ul class="dropdown-menu ">
             <div class="dropdown-style">
-                <li><a class="dropdown-item <?php echo $post_slug == 'announcement' ? ' active' : '' ?>"
-                        href="<?php echo site_url('announcement'); ?>">Announcements <svg width="14" height="14"
+                <li><a class="dropdown-item <?php echo $post_slug == 'announcements' ? ' active' : '' ?>"
+                        href="<?php echo site_url('announcements'); ?>">Announcements <svg width="14" height="14"
                             viewBox="0 0 14 14" fill="none" class="mobile-arrow" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12.079 7.5L6.286 13.292L7 14L14 7L7 0L6.286 0.708L12.08 6.5H0V7.5H12.079Z"
                                 fill="white" />
@@ -271,8 +271,8 @@ if ($post) {
                         </svg>
                     </a>
                 </li>
-                <li><a class="dropdown-item <?php echo $post_slug == 'case-study' ? ' active' : '' ?>"
-                        href="<?php echo site_url('case-study'); ?>">Case Studies <svg width="14" height="14" viewBox="0 0 14 14"
+                <li><a class="dropdown-item <?php echo $post_slug == 'case-studies' ? ' active' : '' ?>"
+                        href="<?php echo site_url('case-studies'); ?>">Case Studies <svg width="14" height="14" viewBox="0 0 14 14"
                             fill="none" class="mobile-arrow" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12.079 7.5L6.286 13.292L7 14L14 7L7 0L6.286 0.708L12.08 6.5H0V7.5H12.079Z"
                                 fill="white" />

@@ -255,6 +255,12 @@ function nexturn_register_meta_boxes($meta_boxes)
                 ),
                 'desc' => __('Optional override for card date, otherwise post date shown.', 'your-prefix'),
             ),
+            array(
+                'name' => 'Keywords',
+                'id'   => 'resource_keywords',
+                'type' => 'text',
+                'desc' => 'Add keywords separated by comma (e.g. AI, data, analytics)'
+            ),
         )
     );
     

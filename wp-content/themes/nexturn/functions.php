@@ -92,14 +92,39 @@ if (!function_exists('nexturn_theme_scripts')):
         wp_localize_script('nexturn-theme', 'NEXTURN_AJAX', [
             'ajax_url' => admin_url('admin-ajax.php')
         ]);
-
      
        // Enqueue jsPDF for single resource pages
-        if (is_singular('resource')) {
-            wp_enqueue_script('jspdf', 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js', array(), '2.5.1', true);
-            // Lightweight, scoped handler for resource form only (formatted for readability)
-            $inline_js = <<<'JS'
+       wp_enqueue_script(
+        'jspdf',
+        'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+        [],
+        '2.5.1',
+        true
+        );
+
+        $inline_js = <<<'JS'
 (function() {
+    console.log('=== PDF Script Loaded ===');
+    
+    // Check jsPDF availability
+    var checkJsPDF = setInterval(function() {
+        if (window.jspdf && window.jspdf.jsPDF) {
+            console.log('jsPDF library loaded successfully');
+            clearInterval(checkJsPDF);
+        }
+    }, 100);
+    
+    setTimeout(function() {
+        clearInterval(checkJsPDF);
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            console.warn('WARNING: jsPDF library not found after 2 seconds');
+        }
+    }, 2000);
+    
+    var resourceData= {
+    title: '',
+    content: ''
+    };
     // Helper: load image and convert to dataURL (returns { dataUrl, width, height })
     function loadImageAsDataURL(src) {
         return new Promise((resolve) => {
@@ -153,16 +178,27 @@ if (!function_exists('nexturn_theme_scripts')):
     async function generateResourcePdf() {
         try {
             var wrapper = document.getElementById('resource-form');
-            if (!wrapper) return;
+            if (!wrapper) {
+                console.error('PDF: wrapper not found');
+                return;
+            }
 
-            var descFull = document.getElementById('resource-description-full');
-            var description = descFull ? descFull.innerHTML.trim() :
-                              (document.getElementById('resource-description') ? document.getElementById('resource-description').innerHTML.trim() : '');
+           var descFull = document.getElementById('resource-description-full');
 
-            if (!window.jspdf || !window.jspdf.jsPDF) return;
+            if (resourceData.content) {
+                description = resourceData.content;
+            } else if (descFull) {
+                description = descFull.innerHTML.trim();
+            } else {
+                description = '';
+            }
 
-            var titleEl = document.querySelector('h1, .entry-title');
-            var title = titleEl ? titleEl.textContent.trim() : document.title;
+           var title = resourceData.title || document.title;
+
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                console.error('PDF: jsPDF library not loaded');
+                return;
+            }
 
             var doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
             var margin = 40, maxWidth = 515;
@@ -268,36 +304,121 @@ if (!function_exists('nexturn_theme_scripts')):
 
             var safeName = (title || 'resource').replace(/[^\w\-\s\.]/g, '_') + '.pdf';
             doc.save(safeName);
+            console.log('PDF generated successfully:', safeName);
 
         } catch (e) {
-            console.error('PDF generation failed', e);
+            console.error('PDF generation failed:', e.message, e.stack);
         }
     }
 
-    // Handler to be run on CF7 events — closes modal, resets form, and triggers generation
-    function handler(e){
+        function handler(e){
+        if (!e || !e.detail || e.detail.status !== 'mail_sent') {
+            console.log('Handler: mail not sent or invalid event');
+            return;
+        }
+        
         var wrapper = document.getElementById('resource-form');
-        if (!wrapper) return;
-        var form = e && e.target ? e.target : null;
-        if (form && !wrapper.contains(form)) return;
-
+        if (!wrapper) {
+            console.error('Handler: resource-form wrapper not found');
+            return;
+        }
+        
+        console.log('Handler: mail sent successfully, processing PDF');
+        
         try {
             var modalEl = document.getElementById('resource_form_modal');
             if (modalEl && window.bootstrap && window.bootstrap.Modal) {
                 var modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
                 modal.hide();
             }
-            var frm = form || wrapper.querySelector('form');
-            if (frm) setTimeout(function(){ try { frm.reset(); } catch(_){} }, 100);
+    
+            var form = wrapper.querySelector('form');
+            if (form) {
+                setTimeout(function(){ form.reset(); }, 150);
+            }
         } catch(_) {}
+    
+        setTimeout(generateResourcePdf, 250);
+    }
+   
 
-        // Slight delay to let CF7 DOM updates finish
-        setTimeout(generateResourcePdf, 100);
+    // Bind CF7 events only when mail has been sent successfully
+    if (document.body) {
+        console.log('Attaching PDF handler to wpcf7mailsent...');
+        document.body.addEventListener('wpcf7mailsent', handler, false);
+        
+        // Also handle mail failure - still generate PDF but log the issue
+        document.body.addEventListener('wpcf7mailfailed', function(e) {
+            console.warn('CF7 Mail failed for form:', e.detail);
+            console.log('Mail failed detail:', e.detail);
+            // Still trigger PDF but with warning
+            if (e.detail && e.detail.contactFormId === 1304) {
+                console.log('Resource form mail failed - attempting PDF generation anyway');
+                
+                // Close modal and reset form before generating PDF
+                try {
+                    var modalEl = document.getElementById('resource_form_modal');
+                    if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                        var modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+                        modal.hide();
+                    }
+        
+                    var wrapper = document.getElementById('resource-form');
+                    var form = wrapper ? wrapper.querySelector('form') : null;
+                    if (form) {
+                        setTimeout(function(){ form.reset(); }, 150);
+                    }
+                } catch(_) {}
+                
+                setTimeout(generateResourcePdf, 250);
+            }
+        });
     }
 
-    // Bind CF7 events
-    document.addEventListener('wpcf7mailsent', handler);
-    document.addEventListener('wpcf7submit', handler);
+    // Also bind at document level for safety
+    document.addEventListener('wpcf7mailsent', function(e) {
+        console.log('wpcf7mailsent fired on document:', e.detail);
+    });
+    
+    // Catch all CF7 events for debugging
+    document.addEventListener('wpcf7submit', function(e) {
+        console.log('wpcf7submit fired:', e.detail);
+    });
+    
+    document.addEventListener('wpcf7invalid', function(e) {
+        console.log('wpcf7invalid fired:', e.detail);
+    });
+    
+    document.addEventListener('wpcf7mailfailed', function(e) {
+        console.log('wpcf7mailfailed fired:', e.detail);
+    });
+
+    document.addEventListener('click', function(e){
+        var btn = e.target.closest('.resource-open');
+        if (!btn) return;
+
+        resourceData.title = btn.getAttribute('data-title') || '';
+        resourceData.content = btn.getAttribute('data-content') || '';
+        console.log('=== Resource button clicked ===');
+        console.log('Title:', resourceData.title);
+        console.log('Content length:', resourceData.content ? resourceData.content.length : 0);
+    });
+
+    // Fallback: detect form submission via CF7 form directly
+    document.addEventListener('DOMContentLoaded', function() {
+        var resourceForm = document.querySelector('#resource-form form.wpcf7-form');
+        if (resourceForm) {
+            console.log('Found CF7 resource form, attaching listeners...');
+            
+            resourceForm.addEventListener('submit', function(e) {
+                console.log('Resource form submit event fired');
+            });
+            
+            resourceForm.addEventListener('wpcf7submit', function(e) {
+                console.log('Resource form wpcf7submit event fired:', e);
+            });
+        }
+    });
 
 })();
 JS;
@@ -306,9 +427,10 @@ JS;
     }
 
 
-}
+
     add_action('wp_enqueue_scripts', 'nexturn_theme_scripts');
 endif;
+
 
 add_filter('run_wptexturize', '__return_false');
 
@@ -635,7 +757,7 @@ function handle_live_search()
         $data[] = [
             'title' => get_the_title($post),
             'link' => get_permalink($post),
-            'excerpt' => wp_trim_words(strip_tags($post->post_content), 20, '...')
+            'excerpt' => wp_trim_words(strip_tags($post->post_content), 20, '')
         ];
     }
 
@@ -899,407 +1021,199 @@ add_shortcode('team-testimonial', function () {
     return ob_get_clean();
 });
  
-// Helper function to render resource HTML
-function render_resource_html($resource, $counter)
-{
-    $resource_summary = rwmb_meta('resource_summary', [], $resource->ID);
-    $resource_text = rwmb_meta('resource_text', [], $resource->ID);
-    $resource_card_text = $resource_summary !== '' ? $resource_summary : $resource_text;
-   
-    // Limit description length
-    $resource_excerpt = wp_trim_words(strip_tags($resource_card_text), 60, '...');
 
-    $resource_image = rwmb_meta('resource_image', ['size' => 'large'], $resource->ID);
-    $resource_image_url = '';
-
-    if ($resource_image && is_array($resource_image)) {
-        $img = reset($resource_image);
-        $resource_image_url = $img['url'];
-    }
-
-    $image_first = ($counter % 2 == 0);
-    $column_reverse = $image_first ? '' : 'column-reverse';
-    $terms = get_the_terms($resource->ID, 'resource_group');
-    $group_name = !empty($terms) && !is_wp_error($terms) ? $terms[0]->name : '';
-
-    ob_start();
-    ?>
-    <div class="row resource-item <?php echo $column_reverse; ?>">
-        <?php if (!$image_first): ?>          
-    <!-- Text First on Desktop, but Image First on Mobile -->
-    <div class="col-lg-6 order-2 order-lg-1 p-0">
-        <!--TEXT CONTENT -->
-        <div class="service-card small-card">
-            <div class="col-12 px-4">
-                <?php if ($group_name): ?>
-                    <span class="resource-group-label mb-4 d-block text-uppercase" style="font-size:28px; line-height:1.15; font-weight:700; margin-bottom:12px; color:#111;">
-                        <?php echo esc_html($group_name); ?>
-                    </span>
-                <?php endif; ?>
-
-                <h4 class="animate-on-scroll resource-title mb-3" style="color: #000 !important;">
-                    <?php echo esc_html(get_the_title($resource)); ?>
-                </h4>
-
-                <?php if ($resource_excerpt): ?>
-                    <p class="description animate-on-scroll innersec-white"><?php echo wp_kses_post($resource_excerpt); ?></p>
-                <?php endif; ?>
-
-                <a href="<?php echo esc_url(get_permalink($resource)); ?>" class="animate-on-scroll svg-container know-more" target="_blank">
-                    <span class="pe-2">Know More</span>
-                    <svg class="home-bn-arrow home-bn-arrow-sec" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-                        <g data-name="Layer 2">
-                            <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z" fill="#ffffff"></path>
-                            <path d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 1.41-1.41l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z" fill="#ffffff"></path>
-                        </g>
-                    </svg>
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- IMAGE Second on Desktop, but First on Mobile -->
-    <div class="col-lg-6 order-1 order-lg-2 p-0 cloud-image"
-        style="background-image: url('<?php echo esc_url($resource_image_url ?: get_template_directory_uri() . '/assets/images/default-resource.jpg'); ?>');">
-    </div>
-    <?php else: ?>
-    <!-- IMAGE First -->
-    <div class="col-lg-6 order-1 p-0 cloud-image"
-        style="background-image: url('<?php echo esc_url($resource_image_url ?: get_template_directory_uri() . '/assets/images/default-resource.jpg'); ?>');">
-    </div>
-
-    <!-- TEXT Second -->
-    <div class="col-lg-6 order-2 p-0">
-        <div class="service-card small-card">
-            <div class="col-12 px-4">
-                <?php if ($group_name): ?>
-                    <span class="resource-group-label mb-4 d-block text-uppercase" style="font-size:28px; line-height:1.15; font-weight:700; margin-bottom:12px; color:#111;">
-                        <?php echo esc_html($group_name); ?>
-                    </span>
-                <?php endif; ?>
-
-                <h4 class="animate-on-scroll resource-title mb-3" style="color: #000 !important;">
-                    <?php echo esc_html(get_the_title($resource)); ?>
-                </h4>
-
-                <?php if ($resource_excerpt): ?>
-                    <p class="animate-on-scroll innersec-white"><?php echo wp_kses_post($resource_excerpt); ?></p>
-                <?php endif; ?>
-
-                <a href="<?php echo esc_url(get_permalink($resource)); ?>" class="animate-on-scroll svg-container know-more" target="_blank">
-                    <span class="pe-2">Know More</span>
-                    <svg class="home-bn-arrow home-bn-arrow-sec" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-                        <g data-name="Layer 2">
-                            <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z" fill="#ffffff"></path>
-                            <path d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 1.41-1.41l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z" fill="#ffffff"></path>
-                        </g>
-                    </svg>
-                </a>
-            </div>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    </div>
-    <?php
-    return ob_get_clean();
-}
-
-add_shortcode('resources-section', function ($atts) {
-
-    $atts = shortcode_atts([
-        'group' => '',
-        'posts_per_page' => -1,
-        'orderby' => 'date',
-        'order' => 'DESC'
-    ], $atts);
-
-    // Fetch all resource groups
-    $terms = get_terms([
-        'taxonomy' => 'resource_group',
-        'hide_empty' => false,
-    ]);
-
-    // Preload resources per group
-    $all_group_resources = [];
-    foreach ($terms as $term) {
-        $resources = get_posts([
-            'post_type' => 'resource',
-            'posts_per_page' => -1,
-            'orderby' => $atts['orderby'],
-            'order' => $atts['order'],
-            'post_status' => 'publish',
-            'tax_query' => [[
-                'taxonomy' => 'resource_group',
-                'field' => 'term_id',
-                'terms' => $term->term_id,
-            ]],
-        ]);
-        $all_group_resources[$term->term_id] = $resources;
-    }
-    
-    // Latest one per group (render section cards)
-    $resources_to_render = [];
-    foreach ($terms as $grp) {
-        if (!empty($all_group_resources[$grp->term_id])) {
-            $resources_to_render[] = $all_group_resources[$grp->term_id][0];
-        }
-    }
-    ob_start();
-?>
-<section class="resources-section home">
-    <div class="container-fluid p-0">
-
-        <!-- DESKTOP VIEW -->
-        <?php if (!empty($terms)): ?>
-            <div class="d-flex flex-row flex-wrap gap-3 justify-content-start mb-4">
-
-                <?php foreach ($terms as $term): ?>
-                    <div class="resource-group-tile"
-                         data-group="<?php echo esc_attr($term->term_id); ?>"
-                         data-group-name="<?php echo esc_attr($term->name); ?>">
-
-                        <span class="resource-group-name">
-                            <?php echo esc_html($term->name); ?>
-                        </span>
-
-                        <!-- Hidden popup list -->
-                        <ul class="hidden-resource-list" style="display:none;">
-                            <?php if (!empty($all_group_resources[$term->term_id])): ?>
-                                <?php foreach ($all_group_resources[$term->term_id] as $res): ?>
-                                    <?php
-                                        // Get resource image (Meta Box field or featured image fallback)
-                                        $thumb_url = '';
-                                        $resource_image = rwmb_meta('resource_image', ['size' => 'medium'], $res->ID);
-                                        if ($resource_image && is_array($resource_image)) {
-                                            $img = reset($resource_image);
-                                            $thumb_url = esc_url($img['url']);
-                                        } elseif (has_post_thumbnail($res->ID)) {
-                                            $thumb_url = get_the_post_thumbnail_url($res->ID, 'medium');
-                                        } else {
-                                            $thumb_url = get_template_directory_uri() . '/assets/images/default-thumb.jpg';
-                                        }
-                                    ?>
-                                    <li data-thumb="<?php echo esc_url($thumb_url); ?>">
-                                        <a href="<?php echo esc_url(get_permalink($res)); ?>" target="_blank">
-                                            <?php echo esc_html(get_the_title($res)); ?>
-                                        </a>
-                                    </li>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <li>No resources in this group.</li>
-                            <?php endif; ?>
-                        </ul>
-
-                    </div>
-                <?php endforeach; ?>
-
-            </div> <!-- CLOSE DESKTOP ROW -->
-        <?php endif; ?>
-
-
-        <!-- MOBILE CAROUSEL -->
-        <div id="resourceCarousel" class="carousel slide d-md-none" data-bs-ride="false">
-            <div class="carousel-inner">
-
-                <?php $active = "active"; ?>
-                <?php foreach ($terms as $group): ?>
-                    <div class="carousel-item <?php echo $active; ?>">
-                        <span class="resource-group-name"
-                              data-group="<?php echo esc_attr($group->term_id); ?>"
-                              data-group-name="<?php echo esc_attr($group->name); ?>">
-                            <?php echo esc_html($group->name); ?>
-                        </span>
-
-                        <!-- Hidden list for popup -->
-                        <ul class="hidden-resource-list" style="display:none;">
-                            <?php if (!empty($all_group_resources[$group->term_id])): ?>
-                                <?php foreach ($all_group_resources[$group->term_id] as $res): ?>
-                                    <li data-thumb="<?php echo esc_url(get_the_post_thumbnail_url($res, 'medium')); ?>">
-                                        <a href="<?php echo esc_url(get_permalink($res)); ?>" target="_blank">
-                                            <?php echo esc_html(get_the_title($res)); ?>
-                                        </a>
-                                    </li>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <li>No resources in this group.</li>
-                            <?php endif; ?>
-                        </ul>
-                    </div>
-
-                    <?php $active = ""; ?>
-                <?php endforeach; ?>
-
-            </div>
-
-            <button class="carousel-control-prev" type="button" data-bs-target="#resourceCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon"></span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#resourceCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon"></span>
-            </button>
-        </div>
-
-        
-        <!-- RESOURCE CARDS (Existing Section Boxes) -->
-        <?php if (!empty($resources_to_render)): ?>
-            <div id="resources-container" class="h-100 resources-container-inner">
-                <?php
-                $counter = 0;
-                foreach ($resources_to_render as $resource):
-                    setup_postdata($resource);
-                    $counter++;
-                    echo render_resource_html($resource, $counter);
-                endforeach;
-                wp_reset_postdata();
-                ?>
-            </div>
-        <?php endif; ?>
-
-    </div>
-</section>
-
-<!-- POPUP HTML -->
-<div id="resource-popup" class="resource-popup">
-    <div class="popup-content">
-        <span class="popup-close">&times;</span>
-        <h3 id="popup-title">Resources</h3>
-
-        <div id="popup-grid"></div>
-    </div>
-</div>
-
-<?php
-return ob_get_clean();
-});
-
-add_action('wp_enqueue_scripts', function () {
-    // Adjust paths based on your theme structure
-    wp_enqueue_style('resources-section', get_template_directory_uri() . '/assets/css/theme.css', [], '1.0.0');
-    wp_enqueue_script('resources-section', get_template_directory_uri() . '/assets/js/resources-section.js', ['jquery'], '1.0.0', true);
-});
-
-//FAQ Shortcode for all pages
-function nexturn_faq_shortcode($atts){
-
-$atts = shortcode_atts(array(
-'id' => 0
-), $atts);
-
-$post_id = intval($atts['id']);
-
-$faq_items = rwmb_meta('nexturn_faq_items', '', $post_id);
-
-if(empty($faq_items)) return '';
-
-$left = [];
-$right = [];
-
-foreach($faq_items as $i => $item){
-if($i % 2 == 0){
-$left[] = $item;
-}else{
-$right[] = $item;
-}
-}
-
-ob_start();
-?>
-
-<div class="nexturn-faq-wrapper">
-
-<div class="faq-column">
-
-<?php foreach($left as $item): ?>
-
-<div class="nexturn-faq-item">
-
-<div class="nexturn-faq-question">
-<span><?php echo esc_html($item['question']); ?></span>
-<span class="nexturn-faq-icon">⌄</span>
-</div>
-
-<div class="nexturn-faq-answer">
-<?php echo wp_kses_post($item['answer']); ?>
-</div>
-
-</div>
-
-<?php endforeach; ?>
-
-</div>
-
-
-<div class="faq-column">
-
-<?php foreach($right as $item): ?>
-
-<div class="nexturn-faq-item">
-
-<div class="nexturn-faq-question">
-<span><?php echo esc_html($item['question']); ?></span>
-<span class="nexturn-faq-icon">⌄</span>
-</div>
-
-<div class="nexturn-faq-answer">
-<?php echo wp_kses_post($item['answer']); ?>
-</div>
-
-</div>
-
-<?php endforeach; ?>
-
-</div>
-
-</div>
-
-<?php
-return ob_get_clean();
-}
-add_shortcode('faq','nexturn_faq_shortcode');
-
-
-//Resource Cards Shortcode for all pages
+//resource card shortcode 
 function nexturn_render_resource_card($resource) {
-    $group_terms = get_the_terms($resource->ID, 'resource_group');
-    $group_slug = !empty($group_terms) && !is_wp_error($group_terms) ? $group_terms[0]->slug : '';
-    $group_name = !empty($group_terms) && !is_wp_error($group_terms) ? $group_terms[0]->name : '';
+    $group_terms  = get_the_terms($resource->ID, 'resource_group');
+    $group_slug   = (!empty($group_terms) && !is_wp_error($group_terms)) ? $group_terms[0]->slug : '';
+    $group_name   = (!empty($group_terms) && !is_wp_error($group_terms)) ? $group_terms[0]->name : '';
 
-    $summary = rwmb_meta('resource_summary', [], $resource->ID);
-    $full = rwmb_meta('resource_text', [], $resource->ID);
-    $card_text = !empty($summary) ? wp_trim_words(strip_tags($summary), 30, '...') : wp_trim_words(strip_tags($full), 30, '...');
+    $summary   = rwmb_meta('resource_summary', [], $resource->ID);
+    $full      = rwmb_meta('resource_text',    [], $resource->ID);
+    $card_text = !empty($summary)
+    ? wp_trim_words(wp_strip_all_tags(html_entity_decode($summary)), 30, '')
+    : wp_trim_words(wp_strip_all_tags(html_entity_decode($full)), 30, '');
+
     $image_meta = rwmb_meta('resource_image', ['size' => 'large'], $resource->ID);
-    $image_url = ($image_meta && is_array($image_meta)) ? reset($image_meta)['url'] : get_the_post_thumbnail_url($resource->ID, 'large');
+    $image_url  = ($image_meta && is_array($image_meta))
+        ? reset($image_meta)['url']
+        : get_the_post_thumbnail_url($resource->ID, 'large');
 
-    $date = rwmb_meta('resource_date', [], $resource->ID);
-    $display_date = !empty($date) ? date('M j, Y', strtotime($date)) : get_the_date('M j, Y', $resource->ID);
+    $date         = rwmb_meta('resource_date', [], $resource->ID);
+    $display_date = !empty($date)
+        ? date('Y-m-d', strtotime($date))
+        : get_the_date('Y-m-d', $resource->ID);
 
-   $is_read = in_array($group_slug, ['announcement','announcements','blog','blogs']);
+    // CTA logic
+    $is_read_more = in_array($group_slug, ['announcement', 'announcements', 'blog', 'blogs']);
 
-$cta_label = $is_read ? 'Read More' : 'Download';
+    if ($is_read_more) {
+        $cta_label = 'Read More';
+        $cta_href  = esc_url(get_permalink($resource->ID));
+        $cta_extra = 'target="_blank"';
+    } else {
+        $cta_label = 'Download';
+        $cta_href  = 'javascript:void(0)';
+       $content = rwmb_meta('resource_text', [], $resource->ID);
+        $content = wp_strip_all_tags($content);
 
-$cta_link = $is_read ? get_permalink($resource->ID) : '#';
-
-$cta_attrs = $is_read 
-    ? '' 
-    : 'data-bs-toggle="modal" data-bs-target="#resource_form_modal"';
-    $cta_link = in_array($group_slug, ['announcement','blogs']) ? get_permalink($resource->ID) : 'javascript:void(0)';
-    $cta_attrs = in_array($group_slug, ['announcement','blogs']) 
-        ? ''
-        : 'data-bs-toggle="modal" data-bs-target="#resource_form_modal" data-resource-id="' . esc_attr($resource->ID) . '"';
+        $cta_extra = 'data-bs-toggle="modal"
+        data-bs-target="#resource_form_modal"
+        class="resource-open"
+        data-title="' . esc_attr(get_the_title($resource)) . '"
+        data-content="' . esc_attr($content) . '"';
+    }
 
     ob_start(); ?>
     <div class="resource-card">
-        <div class="resource-card-img"><img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr(get_the_title($resource)); ?>"></div>
+
+        <?php if ($image_url): ?>
+        <div class="resource-card-img">
+            <img src="<?php echo esc_url($image_url); ?>"
+                 alt="<?php echo esc_attr(get_the_title($resource)); ?>">
+        </div>
+        <?php endif; ?>
+
         <div class="resource-card-content">
-            <?php if ($group_name): ?><div class="resource-meta"><?php echo esc_html($group_name); ?></div><?php endif; ?>
+
             <h4 class="resource-title"><?php echo esc_html(get_the_title($resource)); ?></h4>
+
             <div class="resource-date"><?php echo esc_html($display_date); ?></div>
+
+            <?php if ($card_text): ?>
             <p class="resource-desc"><?php echo esc_html($card_text); ?></p>
+            <?php endif; ?>
+
             <div class="resource-actions">
-                <a class="btn resource-cta" href="<?php echo esc_url($cta_link); ?>" <?php echo $cta_attrs; ?>>
-                    <?php echo esc_html($cta_label); ?>
+
+                <?php if ($is_read_more): ?>
+
+                    <!-- READ MORE -->
+                    <a href="<?php echo esc_url(get_permalink($resource->ID)); ?>"
+                    class="svg-container download-btn cta-btn">
+                        <span class="pe-3">Read More</span>
+                        <svg class="home-bn-arrow home-bn-arrow-sec" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                            <g data-name="Layer 2">
+                                <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z"
+                                    class="fill-000000"></path>
+                                <path
+                                    d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 0-1.41 1 1 0 0 1 1.41 0l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z"
+                                    class="fill-000000"></path>
+                            </g>
+                        </svg>
+                    </a>
+
+                <?php else: ?>
+                <!-- Download button with matching know-more styling -->
+                <a href="javascript:void(0);"
+                    class="svg-container download-btn resource-open"
+                    data-bs-toggle="modal"
+                    data-bs-target="#resource_form_modal"
+                    data-title="<?php echo esc_attr(get_the_title($resource)); ?>"
+                    data-content="<?php echo esc_attr(rwmb_meta('resource_text', [], $resource->ID)); ?>">
+                    <span>Download</span>  
+                    <svg class="home-bn-arrow" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                        <g data-name="Layer 2">
+                            <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z"></path>
+                            <path d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 0-1.41 1 1 0 0 1 1.41 0l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z"></path>
+                        </g>
+                    </svg>
                 </a>
+                <?php endif; ?>
+            </div>
+
+        </div>
+       
+    </div>
+    <?php
+    return ob_get_clean();
+}
+
+function nexturn_render_resource_page_featured($resource) {
+    $group_terms  = get_the_terms($resource->ID, 'resource_group');
+    $group_name   = (!empty($group_terms) && !is_wp_error($group_terms)) ? $group_terms[0]->name : '';
+    $summary   = rwmb_meta('resource_summary', [], $resource->ID);
+    $full      = rwmb_meta('resource_text',    [], $resource->ID);
+    $card_text = !empty($summary)
+        ? wp_trim_words(wp_strip_all_tags(html_entity_decode($summary)), 45, '...')
+        : wp_trim_words(wp_strip_all_tags(html_entity_decode($full)), 45, '...');
+
+    $image_meta = rwmb_meta('resource_image', ['size' => 'large'], $resource->ID);
+    $image_url  = ($image_meta && is_array($image_meta))
+        ? reset($image_meta)['url']
+        : get_the_post_thumbnail_url($resource->ID, 'large');
+
+    $date         = rwmb_meta('resource_date', [], $resource->ID);
+    $display_date = !empty($date)
+        ? date('Y-m-d', strtotime($date))
+        : get_the_date('Y-m-d', $resource->ID);
+
+    $group_slug   = (!empty($group_terms) && !is_wp_error($group_terms)) ? $group_terms[0]->slug : '';
+    $is_read_more = in_array($group_slug, ['announcement', 'announcements', 'blog', 'blogs']);
+
+    if ($is_read_more) {
+        $cta_label = 'Read More';
+        $cta_href  = esc_url(get_permalink($resource->ID));
+        $cta_extra = 'target="_blank"';
+    } else {
+        $cta_label = 'Download';
+        $cta_href  = 'javascript:void(0)';
+        $content = rwmb_meta('resource_text', [], $resource->ID);
+        $content = wp_strip_all_tags($content);
+        $cta_extra = 'data-bs-toggle="modal"
+            data-bs-target="#resource_form_modal"
+            class="resource-open"
+            data-title="' . esc_attr(get_the_title($resource)) . '"
+            data-content="' . esc_attr($content) . '"';
+    }
+
+    ob_start(); ?>
+    <div class="resource-featured-card">
+        <?php if ($image_url): ?>
+            <div class="resource-featured-image col-xs-12 col-lg-5 p-0">
+                <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr(get_the_title($resource)); ?>">
+            </div>
+        <?php endif; ?>
+        <div class="resource-featured-content colxs-12 col-lg-7 p-0" style="padding: 24px 24px; background:#fff;">
+            
+            <h2 class="resource-featured-title"><?php echo esc_html(get_the_title($resource)); ?></h2>
+            <div class="resource-featured-date"><?php echo esc_html($display_date); ?></div>
+            <p class="resource-featured-desc"><?php echo esc_html($card_text); ?></p>
+            <div class="resource-action">
+                <?php if ($is_read_more): ?>
+
+                    <!-- READ MORE -->
+                    <a href="<?php echo esc_url(get_permalink($resource->ID)); ?>"
+                    class="svg-container download-btn cta-btn">
+                        <span class="pe-3">Read More</span>
+                        <svg class="home-bn-arrow home-bn-arrow-sec" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                            <g data-name="Layer 2">
+                                <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z"
+                                    class="fill-000000"></path>
+                                <path
+                                    d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 0-1.41 1 1 0 0 1 1.41 0l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z"
+                                    class="fill-000000"></path>
+                            </g>
+                        </svg>
+                    </a>
+
+                <?php else: ?>
+                <!-- Download button with matching know-more styling -->
+                <a href="javascript:void(0);"
+                    class="svg-container download-btn resource-open"
+                    data-bs-toggle="modal"
+                    data-bs-target="#resource_form_modal"
+                    data-title="<?php echo esc_attr(get_the_title($resource)); ?>"
+                    data-content="<?php echo esc_attr(rwmb_meta('resource_text', [], $resource->ID)); ?>">
+                    <span>Download</span>  
+                    <svg class="home-bn-arrow" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                        <g data-name="Layer 2">
+                            <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z"></path>
+                            <path d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 0-1.41 1 1 0 0 1 1.41 0l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z"></path>
+                        </g>
+                    </svg>
+                </a>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -1307,86 +1221,216 @@ $cta_attrs = $is_read
     return ob_get_clean();
 }
 
-function nexturn_resource_cards($atts) {
+function nexturn_resource_page_layout($atts) {
     $atts = shortcode_atts([
         'group' => '',
-        'posts_per_page' => 9,
+        'posts_per_page' => 12,
         'orderby' => 'date',
         'order' => 'DESC',
     ], $atts);
 
-    $args = [
+    $featured_args = [
         'post_type' => 'resource',
         'post_status' => 'publish',
-        'posts_per_page' => intval($atts['posts_per_page']),
+        'posts_per_page' => 1,
         'orderby' => $atts['orderby'],
         'order' => $atts['order'],
     ];
 
     if (!empty($atts['group'])) {
-        $args['tax_query'] = [[
+        $featured_args['tax_query'] = [[
             'taxonomy' => 'resource_group',
             'field' => 'slug',
             'terms' => sanitize_title($atts['group']),
         ]];
     }
 
-    $query = new WP_Query($args);
+    $featured_query = new WP_Query($featured_args);
+    $featured_id = null;
     ob_start();
 
-    echo '<div class="resource-card-grid">';
-    if ($query->have_posts()) {
-        while ($query->have_posts()) {
-            $query->the_post();
-            global $post;
-            echo nexturn_render_resource_card($post);
-        }
+    echo '<div id="resource-page-layout" class="resource-page-layout" data-resource-group="' . esc_attr($atts['group']) . '">';
+    echo '<div><h3 class="mb-2 service-subhead">Latest Resources</h3></div>';
+    
+
+    if ($featured_query->have_posts()) {
+        $featured_query->the_post();
+        global $post;
+        $featured_id = $post->ID;
+        echo '<div class="resource-page-featured-section">';
+        echo nexturn_render_resource_page_featured($post);
+        echo '</div>';
+    }
+    wp_reset_postdata();
+
+    $all_args = [
+        'post_type' => 'resource',
+        'post_status' => 'publish',
+        'posts_per_page' => intval($atts['posts_per_page']),
+        'orderby' => $atts['orderby'],
+        'order' => $atts['order'],
+    ];
+    if ($featured_id) {
+        $all_args['post__not_in'] = [$featured_id];
+    }
+
+    if (!empty($atts['group'])) {
+        $all_args['tax_query'] = [[
+            'taxonomy' => 'resource_group',
+            'field' => 'slug',
+            'terms' => sanitize_title($atts['group']),
+        ]];
+    }
+            
+    $all_query = new WP_Query($all_args);
+
+    
+    echo '<h3 class="mb-2 service-subhead">More Resources</h3>';
+    echo '<div class="resource-carousel owl-carousel owl-theme">';
+
+    if ($all_query->have_posts()) {
+       while ($all_query->have_posts()) {
+        $all_query->the_post();
+        global $post;
+
+        echo '<div class="item">';
+        echo nexturn_render_resource_card($post);
+        echo '</div>';}
     } else {
         echo '<div class="no-resource">No resources found.</div>';
     }
+
     echo '</div>';
+
+    echo '</div>'; // page layout
 
     wp_reset_postdata();
     return ob_get_clean();
 }
-add_shortcode('resource_cards', 'nexturn_resource_cards');
+add_shortcode('resource_page_layout', 'nexturn_resource_page_layout');
 
-function nexturn_resource_category_page($atts) {
-    $atts = shortcode_atts([
-        'group' => 'announcement',
-        'title' => '',
-        'banner' => '',
-    ], $atts);
+function nexturn_get_resource_query($group_slugs = [], $posts_per_page = 12, $orderby = 'date', $order = 'DESC') {
+    $args = [
+        'post_type'      => 'resource',
+        'post_status'    => 'publish',
+        'posts_per_page' => intval($posts_per_page),
+        'orderby'        => sanitize_text_field($orderby),
+        'order'          => sanitize_text_field($order),
+    ];
 
-    $group_name = ucfirst(str_replace('-', ' ', $atts['group']));
-    $title = !empty($atts['title']) ? $atts['title'] : $group_name;
-    $banner = !empty($atts['banner']) ? esc_url($atts['banner']) : get_template_directory_uri() . '/assets/images/default-resource-banner.jpg';
+    if (!empty($group_slugs)) {
+        $args['tax_query'] = [[
+            'taxonomy' => 'resource_group',
+            'field'    => 'slug',
+            'terms'    => array_map('sanitize_text_field', (array) $group_slugs),
+        ]];
+    }
 
-    ob_start(); ?>
-    <section class="resource-hero-banner" style="background-image:url('<?php echo esc_url($banner); ?>')">
-        <div class="hero-content container">
-            <div class="hero-breadcrumb"><a href="<?php echo esc_url(site_url('/')); ?>">Home</a> / <span>Resource Center</span> / <span><?php echo esc_html($group_name); ?></span></div>
-            <div class="hero-title"><?php echo esc_html($title); ?></div>
-        </div>
-    </section>
-    <section class="container my-5">
-        <?php echo do_shortcode('[resource_cards group="' . esc_attr($atts['group']) . '" posts_per_page="12"]'); ?>
-    </section>
-    <?php
+    return new WP_Query($args);
+}
+
+function nexturn_render_resource_carousel($query, $title = '') {
+    ob_start();
+
+    if ($title) {
+        echo '<h3 class="mb-2 service-subhead">' . esc_html($title) . '</h3>';
+    }
+
+    if ($query->have_posts()) {
+        echo '<div class="resource-carousel owl-carousel owl-theme">';
+
+        while ($query->have_posts()) {
+            $query->the_post();
+            global $post;
+            echo '<div class="item">';
+            echo nexturn_render_resource_card($post);
+            echo '</div>';
+        }
+
+        echo '</div>';
+    } else {
+        echo '<div class="no-resource">No resources found.</div>';
+    }
+
+    wp_reset_postdata();
     return ob_get_clean();
 }
-add_shortcode('resource_category_page', 'nexturn_resource_category_page');
+
+//new shortcode for latest resource
+function nexturn_latest_resource_shortcode($atts) {
+    $atts = shortcode_atts([
+        'group' => '',
+        'orderby' => 'date',
+        'order' => 'DESC',
+    ], $atts, 'latest_resource');
+
+    $query = nexturn_get_resource_query($atts['group'] ? explode(',', $atts['group']) : [], 1, $atts['orderby'], $atts['order']);
+    
+    if ($query->have_posts()) {
+        $query->the_post();
+        $resource = get_post();
+        $output = '<div class="latest-resource-shortcode">';
+        $output .= nexturn_render_resource_page_featured($resource);
+        $output .= '</div>';
+        wp_reset_postdata();
+        return $output;
+    }
+
+    return '<p>No latest resource found.</p>';
+}
+add_shortcode('latest_resource', 'nexturn_latest_resource_shortcode');
+
+function nexturn_case_study_articles_shortcode($atts) {
+    $atts = shortcode_atts([
+        'posts_per_page' => 12,
+        'orderby' => 'date',
+        'order' => 'DESC',
+    ], $atts, 'case_study_articles');
+
+    $query = nexturn_get_resource_query([
+        'case-study',
+        'case-studies',
+        'article',
+        'articles',
+    ], $atts['posts_per_page'], $atts['orderby'], $atts['order']);
+
+    return nexturn_render_resource_carousel($query, 'Case Studies & Articles');
+}
+add_shortcode('case_study_articles', 'nexturn_case_study_articles_shortcode');
+
+function nexturn_announcement_blog_shortcode($atts) {
+    $atts = shortcode_atts([
+        'posts_per_page' => 12,
+        'orderby' => 'date',
+        'order' => 'DESC',
+    ], $atts, 'announcement_blogs');
+
+    $query = nexturn_get_resource_query([
+        'announcement',
+        'announcements',
+        'blog',
+        'blogs',
+    ], $atts['posts_per_page'], $atts['orderby'], $atts['order']);
+
+    return nexturn_render_resource_carousel($query, 'Announcements & Blogs');
+}
+add_shortcode('announcement_blogs', 'nexturn_announcement_blog_shortcode');
+
+
+//download model for resources
 add_action('wp_footer', 'nexturn_global_resource_modal');
 
 function nexturn_global_resource_modal() {
 ?>
 <div class="modal fade" id="resource_form_modal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content p-4">
+        <div class="modal-content p-3">
 
             <div class="modal-header border-0 pb-0">
                 <h2 class="modal-title">Download Resource</h2>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="close close-btn" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
             </div>
 
             <div class="modal-body">
@@ -1400,3 +1444,75 @@ function nexturn_global_resource_modal() {
 </div>
 <?php
 }
+
+//Keyword search for resources
+add_action('wp_ajax_resource_keyword_search', 'resource_keyword_search');
+add_action('wp_ajax_nopriv_resource_keyword_search', 'resource_keyword_search');
+
+function resource_keyword_search() {
+
+    $keyword = isset($_POST['keyword']) ? sanitize_text_field($_POST['keyword']) : '';
+
+    $group = isset($_POST['group']) ? sanitize_text_field($_POST['group']) : '';
+
+    $args = [
+        'post_type' => 'resource',
+        'post_status' => 'publish',
+        'posts_per_page' => -1,
+    ];
+
+    if (!empty($group)) {
+        $args['tax_query'] = [
+            [
+                'taxonomy' => 'resource_group',
+                'field'    => 'slug',
+                'terms'    => $group,
+            ]
+        ];
+    }
+
+    if (!empty($keyword)) {
+        $args['meta_query'] = [
+            [
+                'key'     => 'resource_keywords',
+                'value'   => $keyword,
+                'compare' => 'LIKE'
+            ]
+        ];
+    }
+
+    $query = new WP_Query($args);
+
+    ob_start();
+
+    echo '<div class="resource-carousel owl-carousel owl-theme">';
+
+    if ($query->have_posts()) {
+
+        while ($query->have_posts()) {
+        $query->the_post();
+        global $post;
+
+        echo '<div class="item">';
+        echo nexturn_render_resource_card($post);
+        echo '</div>';
+   }
+    } else {
+        echo '<p>No matching resources found</p>';
+    }
+
+    echo '</div>';
+
+    wp_reset_postdata();
+
+    echo ob_get_clean();
+    wp_die();
+}
+function resource_enqueue_scripts() {
+    wp_enqueue_script('resource-js', get_template_directory_uri() . '/js/theme.js', ['jquery'], null, true);
+
+    wp_localize_script('resource-js', 'ajax_object', [
+        'ajax_url' => admin_url('admin-ajax.php'),
+    ]);
+}
+add_action('wp_enqueue_scripts', 'resource_enqueue_scripts');

@@ -209,7 +209,6 @@ function nexturn_change_title_text( $title ){
         $title = 'Enter impact story title';
     }
 
-
     return $title;
 }
 
@@ -249,7 +248,9 @@ function resource_init() {
         'hierarchical'       => false,
         'menu_position'      => null,
         'menu_icon'          => 'dashicons-media-document',
-        'supports'           => array('title'),
+        // 'supports'           => array('title'),
+        'supports' => array('title', 'editor', 'thumbnail'), // enables content editor
+        'show_in_rest' => true, // enables Gutenberg
         'show_in_admin_bar'  => true
     );
 
