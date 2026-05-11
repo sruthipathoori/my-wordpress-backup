@@ -1327,7 +1327,6 @@ function nexturn_global_resource_modal() {
 }
 
 
-
 //Keyword search for resources
 add_action('wp_ajax_resource_keyword_search', 'resource_keyword_search');
 add_action('wp_ajax_nopriv_resource_keyword_search', 'resource_keyword_search');
@@ -1337,6 +1336,9 @@ function resource_keyword_search() {
     $keyword = isset($_POST['keyword']) ? sanitize_text_field($_POST['keyword']) : '';
 
     $group = isset($_POST['group']) ? sanitize_text_field($_POST['group']) : '';
+
+    // If keyword is empty, exclude the latest resource like the shortcode does
+    $exclude_latest = empty($keyword);
 
     $args = [
         'post_type' => 'resource',
@@ -1364,6 +1366,23 @@ function resource_keyword_search() {
         ];
     }
 
+    if ($exclude_latest) {
+        // Get latest post ID to exclude
+        $latest_args = [
+            'post_type' => 'resource',
+            'post_status' => 'publish',
+            'posts_per_page' => 1,
+            'orderby' => 'date',
+            'order' => 'DESC',
+        ];
+        if (!empty($group)) {
+            $latest_args['tax_query'] = $args['tax_query'];
+        }
+        $latest_query = new WP_Query($latest_args);
+        $latest_id = ($latest_query->have_posts()) ? $latest_query->posts[0]->ID : 0;
+        $args['post__not_in'] = [$latest_id];
+    }
+
     $query = new WP_Query($args);
 
     ob_start();
@@ -1373,12 +1392,72 @@ function resource_keyword_search() {
     if ($query->have_posts()) {
 
         while ($query->have_posts()) {
-        $query->the_post();
-        global $post;
+            $query->the_post();
+            $post_id = get_the_ID();
 
-        echo '<div class="item">';
-        echo nexturn_render_resource_card($post); // remove the nexturn_render_resource_card function
-   }
+            // IMAGE
+            $image_meta = rwmb_meta('resource_image', ['size' => 'medium'], $post_id);
+            $image_url  = ($image_meta && is_array($image_meta))
+                ? reset($image_meta)['url']
+                : get_the_post_thumbnail_url($post_id, 'medium');
+
+            // CONTENT
+            $summary = rwmb_meta('resource_summary', [], $post_id);
+            $full    = rwmb_meta('resource_text', [], $post_id);
+
+            $clean_summary = wp_kses_post($summary);
+
+            if (!empty(trim(strip_tags($clean_summary)))) {
+                $desc = wp_trim_words(strip_tags($clean_summary), 35, '...');
+                $display_content = wpautop($clean_summary);
+            } else {
+                $desc = wp_trim_words(strip_tags($full), 35, '...');
+                $display_content = wpautop($desc);
+            }
+            // DATE
+            $date = rwmb_meta('resource_date', [], $post_id);
+            $display_date = $date
+                ? date('Y-m-d', strtotime($date))
+                : get_the_date('Y-m-d', $post_id);
+
+            ?>
+            <div class="item">
+                <div class="resource-card">
+                    <!-- IMAGE -->
+                    <div class="resource-card-img">
+                        <img src="<?php echo esc_url($image_url); ?>">
+                    </div>
+                    <!-- CONTENT -->
+                    <div class="resource-card-content">
+                        <h5><?php echo esc_html(get_the_title()); ?></h5>
+
+                        <div class="resource-date">
+                            <?php echo esc_html($display_date); ?>
+                        </div>
+
+                        <div class="resource-desc">
+                            <?php echo wp_kses_post($display_content); ?>
+                        </div>
+                        <!-- DOWNLOAD BUTTON -->
+                        <a href="javascript:void(0);"
+                           class="svg-container download-btn resource-open"
+                           data-bs-toggle="modal"
+                           data-bs-target="#resource_form_modal"
+                           data-resource-id="<?php echo esc_attr($post_id); ?>"
+                           data-title="<?php echo esc_attr(get_the_title()); ?>">
+                            <span>Download</span>
+                            <svg class="home-bn-arrow" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                                <g data-name="Layer 2">
+                                    <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z"></path>
+                                    <path d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 0-1.41 1 1 0 0 1 1.41 0l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z"></path>
+                                </g>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <?php
+        }
     } else {
         echo '<p>No matching resources found</p>';
     }
@@ -1387,6 +1466,7 @@ function resource_keyword_search() {
 
     wp_reset_postdata();
 
-    echo ob_get_clean();
+    $output = ob_get_clean();
+    echo $output;
     wp_die();
 }
