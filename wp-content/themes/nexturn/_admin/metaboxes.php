@@ -216,7 +216,7 @@ function nexturn_register_meta_boxes($meta_boxes)
         'autosave' => true,
         'fields' => array(
             array(
-                'name' => __('Short Summary (Card text)', 'your-prefix'),
+                'name' => __('Resource Summary', 'your-prefix'),
                 'id' => "{$resource_prefix}summary",
                 'type' => 'wysiwyg',
                 'options' => array(
@@ -228,7 +228,7 @@ function nexturn_register_meta_boxes($meta_boxes)
                 'desc' => __('Short summary used on Resource Center cards.', 'your-prefix'),
             ),
             array(
-                'name' => __('Full Resource Description (for single page and PDF)', 'your-prefix'),
+                'name' => __('Full Resource Description', 'your-prefix'),
                 'id' => "{$resource_prefix}text",
                 'type' => 'wysiwyg',
                 'options' => array(
@@ -247,67 +247,16 @@ function nexturn_register_meta_boxes($meta_boxes)
                 'desc' => __('Image appearing on cards and hero', 'your-prefix'),
             ),
             array(
-                'name' => __('Published Date', 'your-prefix'),
-                'id' => "{$resource_prefix}date",
-                'type' => 'date',
-                'js_options' => array(
-                    'dateFormat' => 'yy-mm-dd'
-                ),
-                'desc' => __('Optional override for card date, otherwise post date shown.', 'your-prefix'),
-            ),
-            array(
-                'name' => 'Keywords',
-                'id'   => 'resource_keywords',
+                'name' => __('Keywords', 'your-prefix'),
+                'id'   => "{$resource_prefix}keywords",
                 'type' => 'text',
                 'desc' => 'Add keywords separated by comma (e.g. AI, data, analytics)'
             ),
         )
     );
-    
-    // $resource_prefix = 'resource_';
-    // $meta_boxes[] = array(
-    //     'id' => 'resource_info',
-    //     'title' => __('Resource Information', 'your-prefix'),
-    //     'post_types' => array('resource'),
-    //     'context' => 'normal',
-    //     'priority' => 'high',
-    //     'autosave' => true,
-    //     'fields' => array(
-    //         array(
-    //             'name' => __('Summary Description', 'your-prefix'),
-    //             'id' => "{$resource_prefix}summary",
-    //             'type' => 'wysiwyg',
-    //             'options' => array(
-    //                 'textarea_rows' => 5,
-    //                 'media_buttons' => false,
-    //                 'teeny' => false,
-    //                 'wpautop' => false
-    //             ),
-    //             'desc' => __('Short summary used on Resource Center cards.', 'your-prefix'),
-    //         ),
-    //         // array(
-    //         //     'name' => __('Description', 'your-prefix'),
-    //         //     'id' => "{$resource_prefix}text",
-    //         //     'type' => 'wysiwyg',
-    //         //     'options' => array(
-    //         //         'textarea_rows' => 10,
-    //         //         'media_buttons' => false,
-    //         //         'teeny' => false,
-    //         //         'wpautop' => false
-    //         //     ),
-    //         // ),
-    //         array(
-    //             'name' => __('Image', 'your-prefix'),
-    //             'id' => "{$resource_prefix}image",
-    //             'type' => 'image_advanced',
-    //             'max_file_uploads' => 1,
-    //         ),
-    //     )
-    // );
 
     
     $faq_prefix = 'faq_';
-
     $meta_boxes[] = array(
         'id' => 'faq_info',
         'title' => __('FAQ Information', 'your-prefix'),

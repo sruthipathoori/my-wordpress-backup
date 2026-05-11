@@ -249,7 +249,7 @@ function resource_init() {
         'menu_position'      => null,
         'menu_icon'          => 'dashicons-media-document',
         // 'supports'           => array('title'),
-        'supports' => array('title', 'editor', 'thumbnail'), // enables content editor
+        'supports' => array('title', 'thumbnail'), // enables content editor
         'show_in_rest' => true, // enables Gutenberg
         'show_in_admin_bar'  => true
     );

@@ -9,8 +9,8 @@
     <?php wp_head(); ?>
 
     <!-- Google Fonts preconnect -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">;
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>;
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-TSS74GRH62"></script>
