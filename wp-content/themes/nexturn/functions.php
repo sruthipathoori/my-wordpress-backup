@@ -1326,7 +1326,113 @@ function nexturn_global_resource_modal() {
 <?php
 }
 
-
+//resource card shortcode
+function nexturn_render_resource_card($resource) {
+    $group_terms  = get_the_terms($resource->ID, 'resource_group');
+    $group_slug   = (!empty($group_terms) && !is_wp_error($group_terms)) ? $group_terms[0]->slug : '';
+    $group_name   = (!empty($group_terms) && !is_wp_error($group_terms)) ? $group_terms[0]->name : '';
+ 
+    $summary   = rwmb_meta('resource_summary', [], $resource->ID);
+    $full      = rwmb_meta('resource_text',    [], $resource->ID);
+    $card_text = !empty($summary)
+    ? wp_trim_words(wp_strip_all_tags(html_entity_decode($summary)), 30, '')
+    : wp_trim_words(wp_strip_all_tags(html_entity_decode($full)), 30, '');
+ 
+    $image_meta = rwmb_meta('resource_image', ['size' => 'large'], $resource->ID);
+    $image_url  = ($image_meta && is_array($image_meta))
+        ? reset($image_meta)['url']
+        : get_the_post_thumbnail_url($resource->ID, 'large');
+ 
+    $date         = rwmb_meta('resource_date', [], $resource->ID);
+    $display_date = !empty($date)
+        ? date('Y-m-d', strtotime($date))
+        : get_the_date('Y-m-d', $resource->ID);
+ 
+    // CTA logic
+    $is_read_more = in_array($group_slug, ['announcement', 'announcements', 'blog', 'blogs']);
+ 
+    if ($is_read_more) {
+        $cta_label = 'Read More';
+        $cta_href  = esc_url(get_permalink($resource->ID));
+        $cta_extra = 'target="_blank"';
+    } else {
+        $cta_label = 'Download';
+        $cta_href  = 'javascript:void(0)';
+    //    $content = rwmb_meta('resource_text', [], $resource->ID);
+    //     $content = wp_strip_all_tags($content);
+ 
+        $cta_extra = 'data-bs-toggle="modal"
+        data-bs-target="#resource_form_modal"
+        class="resource-open"
+        data-title="' . esc_attr(get_the_title($resource)) . '"
+       
+        data-resource-id="' . esc_attr($resource->ID) . '"';
+    }
+ 
+    ob_start(); ?>
+    <div class="resource-card">
+ 
+        <?php if ($image_url): ?>
+        <div class="resource-card-img">
+            <img src="<?php echo esc_url($image_url); ?>"
+                 alt="<?php echo esc_attr(get_the_title($resource)); ?>">
+        </div>
+        <?php endif; ?>
+ 
+        <div class="resource-card-content">
+ 
+            <h4 class="resource-title"><?php echo esc_html(get_the_title($resource)); ?></h4>
+ 
+            <div class="resource-date"><?php echo esc_html($display_date); ?></div>
+ 
+            <?php if ($card_text): ?>
+            <p class="resource-desc"><?php echo esc_html($card_text); ?></p>
+            <?php endif; ?>
+ 
+            <div class="resource-actions">
+ 
+                <?php if ($is_read_more): ?>
+ 
+                    <!-- READ MORE -->
+                    <a href="<?php echo esc_url(get_permalink($resource->ID)); ?>"
+                    class="svg-container download-btn cta-btn">
+                        <span class="pe-3">Read More</span>
+                        <svg class="home-bn-arrow home-bn-arrow-sec" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                            <g data-name="Layer 2">
+                                <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z"
+                                    class="fill-000000"></path>
+                                <path
+                                    d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 0-1.41 1 1 0 0 1 1.41 0l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z"
+                                    class="fill-000000"></path>
+                            </g>
+                        </svg>
+                    </a>
+ 
+                <?php else: ?>
+                <!-- Download button with matching know-more styling -->
+                <a href="javascript:void(0);"
+                    class="svg-container download-btn resource-open"
+                    data-bs-toggle="modal"
+                    data-bs-target="#resource_form_modal"
+                    data-title="<?php echo esc_attr(get_the_title($resource)); ?>"
+                     data-resource-id="<?php echo esc_attr($resource->ID); ?>">
+                    <span>Download</span>  
+                    <svg class="home-bn-arrow" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                        <g data-name="Layer 2">
+                            <path d="M1 16a15 15 0 1 1 15 15A15 15 0 0 1 1 16Zm28 0a13 13 0 1 0-13 13 13 13 0 0 0 13-13Z"></path>
+                            <path d="M12.13 21.59 17.71 16l-5.58-5.59a1 1 0 0 1 0-1.41 1 1 0 0 1 1.41 0l6.36 6.36a.91.91 0 0 1 0 1.28L13.54 23a1 1 0 0 1-1.41 0 1 1 0 0 1 0-1.41Z"></path>
+                        </g>
+                    </svg>
+                </a>
+                <?php endif; ?>
+            </div>
+ 
+        </div>
+       
+    </div>
+    <?php
+    return ob_get_clean();
+}
 
 //Keyword search for resources
 add_action('wp_ajax_resource_keyword_search', 'resource_keyword_search');
@@ -1334,59 +1440,56 @@ add_action('wp_ajax_nopriv_resource_keyword_search', 'resource_keyword_search');
 
 function resource_keyword_search() {
 
-    $keyword = isset($_POST['keyword']) ? sanitize_text_field($_POST['keyword']) : '';
-
-    $group = isset($_POST['group']) ? sanitize_text_field($_POST['group']) : '';
+    $keyword = isset($_POST['keyword'])
+        ? sanitize_text_field($_POST['keyword'])
+        : '';
+        
+    $group = isset($_POST['group'])
+        ? sanitize_text_field($_POST['group'])
+        : '';
 
     $args = [
         'post_type' => 'resource',
         'post_status' => 'publish',
         'posts_per_page' => -1,
+        'orderby' => 'date',
+        'order' => 'DESC',
     ];
 
+    // GROUP FILTER
     if (!empty($group)) {
-        $args['tax_query'] = [
-            [
-                'taxonomy' => 'resource_group',
-                'field'    => 'slug',
-                'terms'    => $group,
-            ]
-        ];
+
+        $args['tax_query'] = [[
+            'taxonomy' => 'resource_group',
+            'field'    => 'slug',
+            'terms'    => $group,
+        ]];
     }
 
+    // KEYWORD FILTER
     if (!empty($keyword)) {
-        $args['meta_query'] = [
-            [
-                'key'     => 'resource_keywords',
-                'value'   => $keyword,
-                'compare' => 'LIKE'
-            ]
-        ];
+        $args['meta_query'] = [[
+            'key'     => 'resource_keywords',
+            'value'   => $keyword,
+            'compare' => 'LIKE'
+        ]];
     }
-
     $query = new WP_Query($args);
-
     ob_start();
-
-    echo '<div class="resource-carousel owl-carousel owl-theme">';
-
     if ($query->have_posts()) {
-
+        echo '<div class="resource-carousel owl-carousel owl-theme">';
         while ($query->have_posts()) {
-        $query->the_post();
-        global $post;
-
-        echo '<div class="item">';
-        echo nexturn_render_resource_card($post); // remove the nexturn_render_resource_card function
-   }
+            $query->the_post();
+            global $post;
+            echo '<div class="item">';
+            echo nexturn_render_resource_card($post);
+            echo '</div>';
+        }
+        echo '</div>';
     } else {
         echo '<p>No matching resources found</p>';
     }
-
-    echo '</div>';
-
     wp_reset_postdata();
-
     echo ob_get_clean();
     wp_die();
 }

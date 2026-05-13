@@ -23,7 +23,7 @@
     <!-- Font Awesome (non-blocking) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-    <link rel="preload" as="image" href="http://localhost/wordpress/wp-content/uploads/2026/04/home-banner-scaled-2-1.webp">
+    <!-- <link rel="preload" as="image" href="http://localhost/wordpress/wp-content/uploads/2026/04/home-banner-scaled-2-1.webp"> -->
 </head>
 
 <body>

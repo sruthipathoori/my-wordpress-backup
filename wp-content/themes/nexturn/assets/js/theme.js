@@ -809,81 +809,95 @@ $('.resource-carousel').owlCarousel({
 
 jQuery(document).ready(function ($) {
 
-    let timer;
+  let timer;
 
-    // SINGLE INIT FUNCTION
+    // INIT CAROUSEL
     function initResourceCarousel() {
+      const $carousel = $('.resource-carousel');
 
-        const $carousel = $('.resource-carousel');
-
-        // Destroy ONLY if already initialized
         if ($carousel.hasClass('owl-loaded')) {
-            $carousel.trigger('destroy.owl.carousel');
-            $carousel.removeClass('owl-loaded');
-            $carousel.find('.owl-stage-outer').children().unwrap();
+          $carousel.trigger('destroy.owl.carousel');
+          $carousel.removeClass('owl-loaded');
+          $carousel.find('.owl-stage-outer').children().unwrap();
         }
-
-        //Re-init clean
         $carousel.owlCarousel({
-            loop: false,
-            margin: 20,
-            nav: true,
-            dots: true,
-            autoplay: false,
-            navText: [
-                '<i class="fa fa-chevron-left"></i>',
-                '<i class="fa fa-chevron-right"></i>'
-            ],
-            responsive: {
-                0: { items: 1, slideBy: 1 },
-                700: { items: 2, slideBy: 2 },
-                1020: { items: 3, slideBy: 3 }
+
+          loop: false,
+          margin: 20,
+          nav: true,
+          dots: true,
+          autoplay: false,
+          navText: [
+            '<i class="fa fa-chevron-left"></i>',
+            '<i class="fa fa-chevron-right"></i>'
+          ],
+          responsive: {
+
+            0: {
+                items: 1,
+                slideBy: 1
+            },
+
+            700: {
+                items: 2,
+                slideBy: 2
+            },
+
+            1020: {
+                items: 3,
+                slideBy: 3
             }
+          }
         });
     }
 
-    // ✅ INITIAL LOAD (ONLY ONCE)
+    // INITIAL
     initResourceCarousel();
-
-    // =========================
-    // 🔍 SEARCH FUNCTION
-    // =========================
+    // SAVE ORIGINAL
+    const originalCards = $('#resource-search-results').html();
+    // SEARCH
     $('#resource-keyword-search').on('keyup', function () {
 
-        let keyword = $(this).val().trim();
-
+      let keyword = $(this).val().trim();
         clearTimeout(timer);
-
         timer = setTimeout(function () {
+          let group = $('.resource-group').val() || '';
 
-            var group = $('#resource-page-layout').data('resource-group') || '';
+            // RESTORE ORIGINAL
+          if (keyword === '') {
 
-            $.ajax({
-                url: ajax_object.ajax_url,
-                type: "POST",
+              $('#resource-search-results').html(originalCards);
+              initResourceCarousel();
+              return;
+          }
+
+            // AJAX SEARCH
+          $.ajax({
+
+              url: ajax_object.ajax_url,
+              type: 'POST',
                 data: {
-                    action: "resource_keyword_search",
-                    keyword: keyword,
-                    group: group
+                  action: 'resource_keyword_search',
+                  keyword: keyword,
+                  group: group
                 },
 
                 success: function (response) {
 
-                    // ✅ Replace entire section
-                    $('#resource-results').html(response);
-
-                    // ✅ Re-init AFTER DOM update
+                  $('#resource-search-results').html(response);
                     setTimeout(function () {
-                        initResourceCarousel();
+                      initResourceCarousel();
                     }, 50);
                 },
 
                 error: function () {
-                    $('#resource-results').html('<p>Error loading results</p>');
-                }
-            });
+                  $('#resource-search-results').html(
+                    '<p>Error loading results</p>'
+                  );
+          }
+      });
 
-        }, 400);
-    });
+    }, 400);
+  });
 
 });
